@@ -3,7 +3,7 @@
 
 int main (int argc, char *argv[]) {
     int tid;
-    #pragma omp parallel shared(tid)
+    #pragma omp parallel
     {
         printf("Hello world from thread %d\n", tid);
     }
