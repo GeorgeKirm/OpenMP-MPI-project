@@ -10,6 +10,6 @@ generate: generateBuild generateRun
 generateBuild:
 	$(CC) -Wall -std=c++11 generator.cpp -o generator.out
 generateRun:
-	./generator.out datafile 1500
+	./generator.out datafile 15000000
 clean:
 	rm -rf *.out datafile all
