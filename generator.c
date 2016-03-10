@@ -24,10 +24,13 @@ int main(int argc, char *argv[]) {
     srand(utime);
     for(i=0;i<coordinate_index;i++){
         cords[i][0]=(float)34*rand()/(RAND_MAX-1);
-	cords[i][1]=(float)34*rand()/(RAND_MAX-1);
-	cords[i][2]=(float)34*rand()/(RAND_MAX-1);
-	fprintf(file,"%f %f %f\n", cords[i][0],cords[i][1],cords[i][2]);    
-}
+		cords[i][1]=(float)34*rand()/(RAND_MAX-1);
+		cords[i][2]=(float)34*rand()/(RAND_MAX-1);
+	
+		fwrite(&cords[i],sizeof(float)*3,);//TODO
+	}
+	fclose();
+	//fprintf(file,"%f %f %f\n", cords[i][0],cords[i][1],cords[i][2]);    
 	
     return 0;
 }

@@ -16,12 +16,15 @@
 */
 int main (int argc, char *argv[]) {
     int tid;
-	FILE *readFile;
-	readFile = fopen(argv[1],"r");
+
 	struct timespec startTime, endTime;
 	int i;
 	int numberOfCoordinates = atoi(argv[2]);
+	int counterForCorrectCoordinates = 0;
 	
+	FILE *readFile;
+	char buffer[30];
+	readFile = fopen(argv[3],"r");
 	if (readFile == NULL)
 	{
 		perror("Error while opening the file");
@@ -33,15 +36,19 @@ int main (int argc, char *argv[]) {
 	#pragma omp master
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
 	
+	//reduction declares that the shared variable will be modified by all threads
+	#pragma omp parallel for default(shared) private(i) reduction (+:counterForCorrectCoordinates)
 	for (i = 0; i < numberOfCoordinates; i++){
-        	tid = omp_get_thread_num();
-        	printf("Hello world from thread %d\n", tid);
+        
+		fgets(buffer,20,readFile);
+		printf("%s",buffer);
+		//if (correctCord)
+		//counterForCorrectCoordinates++;
+		
 	}
-		#pragma omp master
-		{
+	#pragma omp master
 		clock_gettime(CLOCK_MONOTONIC, &endTime);
-		printf("Tasos sad\n");
-		}
+		printf("Prepei na typwnetai oso kai ta threads\n");
     }
     return 0;
 }
