@@ -1,5 +1,3 @@
-#include "generator.h"
-
 int main(int argc, char *argv[]) {
 	/*
 	Check if the given arguments are more than 1. 

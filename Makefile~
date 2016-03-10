@@ -10,7 +10,7 @@ buildE: examine
 run: generateRun examineRun
 
 examine: main.c main.h
-	$(CC) $(CFLAGS) -fopenmp main.c main.h -o main.o
+	$(CC) $(CFLAGS) -fopenmp -c main.c main.h -o main.o
 
 generate: generator.c generator.h
 	$(CC) $(CFLAGS) generator.c generator.h -o generator.o
