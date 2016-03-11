@@ -23,7 +23,8 @@ int main(int argc, char *argv[]) {
 		cords[i][0]=(float)34*rand()/(RAND_MAX-1);
 		cords[i][1]=(float)34*rand()/(RAND_MAX-1);
 		cords[i][2]=(float)34*rand()/(RAND_MAX-1);
-		fprintf(file,"%f %f %f\n", cords[i][0],cords[i][1],cords[i][2]);    
+		//fprintf(file,"%f %f %f\n", cords[i][0],cords[i][1],cords[i][2]);    
+		fprintf(file,"%f\n%f\n%f\n", cords[i][0],cords[i][1],cords[i][2]); 
 	}
 	return 0;
 }
