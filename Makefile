@@ -1,15 +1,25 @@
-CC=gcc
+CC = gcc
+CFLAGS = -Wall -g
 
 all: generate examine
-examine: examineBuild examineRun
-examineBuild:
-	$(CC) -fopenmp main.c -o main.out
-examineRun:
-	./main.out -1 -1 datafile -1 -1
-generate: generateBuild generateRun
-generateBuild:
-	$(CC) -Wall generator.c -o generator.out
-generateRun:
-	./generator.out datafile 1500
+
+buildG: generate
+
+buildE: examine
+
+run: generateRun examineRun
+
+examine: main.c main.h
+	$(CC) $(CFLAGS) -fopenmp main.c main.h -o main.o
+
+generate: generator.c generator.h
+	$(CC) $(CFLAGS) generator.c generator.h -o generator.o
+
+runE:
+	./main.o -1 -1 datafile -1 -1
+
+runG:
+	./generator.o datafile 1500
+
 clean:
-	rm -rf *.out datafile all
+	rm -rf *.o datafile
