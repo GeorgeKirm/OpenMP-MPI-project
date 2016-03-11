@@ -29,7 +29,7 @@ runS:
 	./main2.o -1 -1 datafile -1 -1
 
 runG:
-	./generator.o datafile 100
+	./generator.o datafile 9
 
 clean:
 	rm -rf *.o datafile
