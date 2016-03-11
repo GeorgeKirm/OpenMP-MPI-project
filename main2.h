@@ -15,6 +15,8 @@ typedef struct {
 	int size;
 } Array;
 
+void readingFile(char **, Array *);
+
 void initArray(Array *, int);
 
 void insertArray(Array *, float, float, float);

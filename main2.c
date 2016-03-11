@@ -13,6 +13,33 @@ int main (int argc, char *argv[]) {
 		printf("Wrong number of arguents");
 		exit(0);
 	}
+	struct timespec startTime, endTime;
+
+	clock_gettime(CLOCK_MONOTONIC, &startTime);
+
+	// reading the values from the file
+	Array cords;
+	readingFile(argv, &cords);
+	printf("%f\n", cords.cord1[0]);
+
+	/*
+	* TODO
+	*/
+
+	clock_gettime(CLOCK_MONOTONIC, &endTime);
+
+	const int DAS_NANO_SECONDS_IN_SEC = 1000000000;
+	long timeElapsed_s = endTime.tv_sec - startTime.tv_sec;
+	long timeElapsed_n = endTime.tv_nsec - startTime.tv_nsec;
+	if(timeElapsed_n < 0) {
+		timeElapsed_n = DAS_NANO_SECONDS_IN_SEC + timeElapsed_n;
+		timeElapsed_s--;
+	}
+	printf("Time: %ld.%09ld secs \n", timeElapsed_s, timeElapsed_n);
+	return 0;
+}
+
+void readingFile(char *argv[], Array *cords){
 	FILE *readFile;
 	readFile = fopen(argv[3],"r");
 	if(readFile==NULL) { //exit file if there is no data file
@@ -20,28 +47,26 @@ int main (int argc, char *argv[]) {
 		exit(0);
 	}
 	int coordinateNumberToExamine= atoi(argv[1]);
-	Array cords;
+	//Array cords;
 	if(coordinateNumberToExamine==-1){
-		initArray(&cords, 1000);
+		initArray(cords, 1000);
 	} else {
-		initArray(&cords, coordinateNumberToExamine);
+		initArray(cords, coordinateNumberToExamine);
 	}	
 	char line[256]; /* or other suitable maximum line size */
 	int stoper=0;
-	while (fgets(line, sizeof line, readFile) != NULL && stoper!=coordinateNumberToExamine) {
+	while (fgets(line, sizeof line, readFile) != NULL && stoper!= coordinateNumberToExamine) {
 		float value1 = atof(line);
 		fgets(line, sizeof line, readFile);
 		float value2 = atof(line);
 		fgets(line, sizeof line, readFile);
 		float value3 = atof(line);
-		printf("%f %f %f\n", value1, value2, value3);
-		insertArray(&cords, value1, value2, value3);
+		//printf("%f %f %f\n", value1, value2, value3);
+		insertArray(cords, value1, value2, value3);
 		stoper++;
 	}
+	printf("%f\n", cords->cord1[0]);
 	fclose(readFile);
-	printf("%f %f %f\n",cords.cord1[2], cords.cord2[2], cords.cord3[2]);
-	printf("%d\n", cords.used);
-	return 0;
 }
 
 void initArray(Array *a, int initialSize) {

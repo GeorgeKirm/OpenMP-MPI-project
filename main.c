@@ -19,7 +19,7 @@ int main (int argc, char *argv[]) {
 		printf("Error while opening the file. Run generator.o");
 		exit(0);
 	}
-	coordinateNumberToExamine= atoi(argv[1]);
+	int coordinateNumberToExamine= atoi(argv[1]);
 	if(coordinateNumberToExamine==-1){
 		float cords[1000][3]
 	} else {
@@ -52,13 +52,11 @@ int main (int argc, char *argv[]) {
 				float cords[coordinate_index][3];
 				#pragma omp critical
 				{
-					
+
 				}
 			}
 			fclose(file);
 		}
-
-
 		#pragma omp master
 		{
 			clock_gettime(CLOCK_MONOTONIC, &endTime);
@@ -67,6 +65,3 @@ int main (int argc, char *argv[]) {
 	}
 	return 0;
 }
-
-
-
