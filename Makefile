@@ -1,5 +1,7 @@
 CC = gcc
 CFLAGS = -Wall -g
+LIBS = -L/path/to/libs -lm
+
 
 all: generate examine examine2
 
@@ -12,10 +14,10 @@ buildS: examine2
 run: generateRun examineRun
 
 examine: main.c main.h
-	$(CC) $(CFLAGS) -fopenmp main.c main.h -o main.o
+	$(CC) $(CFLAGS) -fopenmp main.c main.h -o main.o $(LIBS)
 
 examine2: main2.c main2.h
-	$(CC) $(CFLAGS) main2.c main2.h -o main2.o
+	$(CC) $(CFLAGS) main2.c main2.h -o main2.o $(LIBS)
 
 generate: generator.c generator.h
 	$(CC) $(CFLAGS) generator.c generator.h -o generator.o

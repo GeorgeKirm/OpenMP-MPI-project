@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <math.h>
 #define DOWNLIMIT 12
 #define UPLIMIT 30
 
@@ -14,6 +15,8 @@ typedef struct {
 	int used;
 	int size;
 } Array;
+
+void checker(Array *);
 
 void readingFile(char **, Array *);
 

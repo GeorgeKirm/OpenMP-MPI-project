@@ -9,25 +9,23 @@
 *  argv[5]: Proccesses to use MPI or -1 to mark no limit
 */
 int main (int argc, char *argv[]) {
+
 	if(argc!=6) {
 		printf("Wrong number of arguents");
 		exit(0);
 	}
-	struct timespec startTime, endTime;
 
+	struct timespec startTime, endTime;
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
 
 	// reading the values from the file
 	Array cords;
-	readingFile(argv, &cords);
+	readingFile(argv, &cords); // read datafile
 	printf("%f\n", cords.cord1[0]);
+	checker(&cords); // Do the things
 
-	/*
-	* TODO
-	*/
-
+	// getting time of program
 	clock_gettime(CLOCK_MONOTONIC, &endTime);
-
 	const int DAS_NANO_SECONDS_IN_SEC = 1000000000;
 	long timeElapsed_s = endTime.tv_sec - startTime.tv_sec;
 	long timeElapsed_n = endTime.tv_nsec - startTime.tv_nsec;
@@ -37,6 +35,21 @@ int main (int argc, char *argv[]) {
 	}
 	printf("Time: %ld.%09ld secs \n", timeElapsed_s, timeElapsed_n);
 	return 0;
+}
+
+void checker(Array *cords)	{
+	float distance=0;
+	int usableCoordinates=0;
+	int a;
+	for(a = 0; a < cords->used; a++ ){
+		float k = cords->cord1[a] * cords->cord1[a] + cords->cord2[a] * cords->cord2[a] + cords->cord3[a] * cords->cord3[a];
+		distance= sqrtf( k );
+		if( (distance>=12) && (distance<=30) ){
+			usableCoordinates++;
+		}
+		distance=0;
+	}
+	printf("Number of usable cordinates = %d\n", usableCoordinates);
 }
 
 void readingFile(char *argv[], Array *cords){
