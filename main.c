@@ -1,4 +1,4 @@
-#include "main2.h"
+#include "main.h"
 
 /*
 * char *argv[] parameters:
@@ -8,7 +8,6 @@
 *  argv[4]: Thread that are being used or -1 to mark no limit
 *  argv[5]: Proccesses to use MPI or -1 to mark no limit
 */
-
 int main (int argc, char *argv[]) {
 
 	if(argc!=6) {
@@ -17,15 +16,15 @@ int main (int argc, char *argv[]) {
 	}
 
 	
-	// reading the values from the file
+	
 	Array cords;
 	readingFile(argv, &cords); // read datafile
-	
+
 	struct timespec startTime, endTime;
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
 	
-	checker(&cords); // Do the things
-
+	//printf("%f\n", cords.cord1[0]);
+	checker(&cords, atoi(argv[4])); // Do the things
 	// getting time of program
 	clock_gettime(CLOCK_MONOTONIC, &endTime);
 	printTime(startTime,endTime);
@@ -44,18 +43,29 @@ void printTime(struct timespec a,struct timespec b){
 	printf("Time: %ld.%09ld secs \n", timeElapsed_s, timeElapsed_n);
 }
 
-void checker(Array *cords)	{
-	float distance=0;
+void checker(Array *cords, int threadsLimit)	{
+	if(threadsLimit>0) {
+		omp_set_num_threads(threadsLimit);
+	} else {
+		//nothing to do
+	}
 	int usableCoordinates=0;
-	int a;
-	for(a = 0; a < cords->used; a++ ){
-		distance= sqrtf( cords->cord1[a] * cords->cord1[a] 
-				+ cords->cord2[a] * cords->cord2[a] 
-				+ cords->cord3[a] * cords->cord3[a] );
-		if((distance>=DOWNLIMIT) && (distance<=UPLIMIT)) {
-			usableCoordinates++;
+	#pragma omp parallel
+	{
+		float distance=0;
+		int a;
+		int temp=0;
+		#pragma omp for schedule(static,1) private(a, distance)
+		for(a = 0; a < cords->used; a++ ){
+			float k = cords->cord1[a] * cords->cord1[a] + cords->cord2[a] * cords->cord2[a] + cords->cord3[a] * cords->cord3[a];
+			distance= sqrtf( k );
+			if((distance>=DOWNLIMIT) && (distance<=UPLIMIT)) {
+				temp++;
+			}
+			distance=0;
 		}
-		distance=0;
+		#pragma omp critical
+			usableCoordinates = usableCoordinates+temp;
 	}
 	printf("Number of usable cordinates = %d\n", usableCoordinates);
 }
@@ -95,6 +105,36 @@ void readingFile(char *argv[], Array *cords){
 		insertArray(cords, value1, value2, value3);
 		stoper++;
 	}
+
+/*
+	FILE *readFile;
+	readFile = fopen(argv[3],"r");
+	if(readFile==NULL) { //exit file if there is no data file
+		printf("Error while opening the file. Run generator.o\n");
+		exit(0);
+	}
+	int coordinateNumberToExamine= atoi(argv[1]);
+	//Array cords;
+	if(coordinateNumberToExamine==-1){
+		initArray(cords, 1000);
+	} else {
+		initArray(cords, coordinateNumberToExamine);
+	}	
+	char line[256]; 
+	int stoper=0;
+	while (fgets(line, sizeof line, readFile) != NULL && stoper!= coordinateNumberToExamine) {
+		float value1 = atof(line);
+		fgets(line, sizeof line, readFile);
+		float value2 = atof(line);
+		fgets(line, sizeof line, readFile);
+		float value3 = atof(line);
+		//printf("%f %f %f\n", value1, value2, value3);
+		insertArray(cords, value1, value2, value3);
+		stoper++;
+	}
+	//printf("%f\n", cords->cord1[0]);
+	fclose(readFile);
+//*/
 }
 
 void initArray(Array *a, int initialSize) {
