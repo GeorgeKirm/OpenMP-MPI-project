@@ -23,8 +23,24 @@ int main(int argc, char *argv[]) {
 		cords[i][0]=(float)34*rand()/(RAND_MAX-1);
 		cords[i][1]=(float)34*rand()/(RAND_MAX-1);
 		cords[i][2]=(float)34*rand()/(RAND_MAX-1);
-		//fprintf(file,"%f %f %f\n", cords[i][0],cords[i][1],cords[i][2]);    
-		fprintf(file,"%f\n%f\n%f\n", cords[i][0],cords[i][1],cords[i][2]); 
 	}
+	fwrite(cords, sizeof(*cords),coordinate_index*3,file);
+	fclose(file);
+	/*
+	printf("%lu\n",sizeof(float));
+	printf("---palios pinakas--\n");
+	printf("%f\n%f\n%f\n", cords[0][0],cords[0][1],cords[0][2]);
+	//binary
+	FILE *file2  = fopen(argv[1],"rb");
+	fseek(file2, 0, SEEK_END);
+	int lengthOfFile = ftell(file2);
+	printf("PLITHOS %d",lengthOfFile/4/3/3 );
+	
+	float cords2[coordinate_index][3];
+	printf("---meta to binary--\n");
+	fread(cords2, sizeof(float),coordinate_index*3,file2);
+	printf("%f\n%f\n%f\n", cords2[0][0],cords2[0][1],cords2[0][2]);
+	fclose(file2);
+	*/
 	return 0;
 }

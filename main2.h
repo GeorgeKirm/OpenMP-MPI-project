@@ -16,6 +16,8 @@ typedef struct {
 	int size;
 } Array;
 
+void printTime(struct timespec,struct timespec);
+
 void checker(Array *);
 
 void readingFile(char **, Array *);
