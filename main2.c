@@ -16,12 +16,14 @@ int main (int argc, char *argv[]) {
 		exit(0);
 	}
 
-	struct timespec startTime, endTime;
-	clock_gettime(CLOCK_MONOTONIC, &startTime);
-
+	
 	// reading the values from the file
 	Array cords;
 	readingFile(argv, &cords); // read datafile
+	
+	struct timespec startTime, endTime;
+	clock_gettime(CLOCK_MONOTONIC, &startTime);
+	
 	checker(&cords); // Do the things
 
 	// getting time of program
@@ -50,7 +52,7 @@ void checker(Array *cords)	{
 		distance= sqrtf( cords->cord1[a] * cords->cord1[a] 
 				+ cords->cord2[a] * cords->cord2[a] 
 				+ cords->cord3[a] * cords->cord3[a] );
-		if( (distance>=12) && (distance<=30) ){
+		if((distance>=DOWNLIMIT) && (distance<=UPLIMIT)) {
 			usableCoordinates++;
 		}
 		distance=0;
@@ -89,7 +91,7 @@ void readingFile(char *argv[], Array *cords){
 		float value1 = cordsR[stoper][0];
 		float value2 = cordsR[stoper][1];
 		float value3 = cordsR[stoper][2];
-		printf("%f %f %f\n", value1, value2, value3);
+		//printf("%f %f %f\n", value1, value2, value3);
 		insertArray(cords, value1, value2, value3);
 		stoper++;
 	}
@@ -124,4 +126,3 @@ void freeArray(Array *a) {
 	a->cord3 = NULL;
 	a->used = a->size = 0;
 }
-
