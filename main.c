@@ -166,3 +166,4 @@ void freeArray(Array *a) {
 	a->cord3 = NULL;
 	a->used = a->size = 0;
 }
+
