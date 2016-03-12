@@ -5,6 +5,7 @@
 #define DOWNLIMIT 12
 #define UPLIMIT 30
 
+
 typedef struct {
 	float *cord1;
 	float *cord2;
