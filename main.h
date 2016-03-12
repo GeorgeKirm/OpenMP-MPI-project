@@ -6,7 +6,6 @@
 #define DOWNLIMIT 12
 #define UPLIMIT 30
 
-
 typedef struct {
 	float *cord1;
 	float *cord2;
@@ -17,7 +16,9 @@ typedef struct {
 	int size;
 } Array;
 
-void checker(Array *);
+void printTime(struct timespec,struct timespec);
+
+void checker(Array *, int);
 
 void readingFile(char **, Array *);
 
