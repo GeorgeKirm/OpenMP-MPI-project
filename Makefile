@@ -11,7 +11,7 @@ buildE: examine
 
 buildS: examine2
 
-run: generateRun examineRun
+run: runG runE
 
 examine: main.c main.h
 	$(CC) $(CFLAGS) -fopenmp main.c main.h -o main.o $(LIBS)
