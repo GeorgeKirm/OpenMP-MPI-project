@@ -1,4 +1,4 @@
-#include "main.h"
+#include "main2.h"
 
 /*
 * char *argv[] parameters:
@@ -8,6 +8,7 @@
 *  argv[4]: Thread that are being used or -1 to mark no limit
 *  argv[5]: Proccesses to use MPI or -1 to mark no limit
 */
+
 int main (int argc, char *argv[]) {
 
 	if(argc!=6) {
@@ -15,64 +16,60 @@ int main (int argc, char *argv[]) {
 		exit(0);
 	}
 
-	struct timespec startTime, endTime;
-	clock_gettime(CLOCK_MONOTONIC, &startTime);
-
+	
+	// reading the values from the file
 	Array cords;
 	readingFile(argv, &cords); // read datafile
-	//printf("%f\n", cords.cord1[0]);
+	
+	struct timespec startTime, endTime;
+	clock_gettime(CLOCK_MONOTONIC, &startTime);
+	
 	checker(&cords); // Do the things
-
-
-
 
 	// getting time of program
 	clock_gettime(CLOCK_MONOTONIC, &endTime);
+	printTime(startTime,endTime);
+
+	return 0;
+}
+
+void printTime(struct timespec a,struct timespec b){
 	const int DAS_NANO_SECONDS_IN_SEC = 1000000000;
-	long timeElapsed_s = endTime.tv_sec - startTime.tv_sec;
-	long timeElapsed_n = endTime.tv_nsec - startTime.tv_nsec;
+	long timeElapsed_s = b.tv_sec - a.tv_sec;
+	long timeElapsed_n = b.tv_nsec - a.tv_nsec;
 	if(timeElapsed_n < 0) {
 		timeElapsed_n = DAS_NANO_SECONDS_IN_SEC + timeElapsed_n;
 		timeElapsed_s--;
 	}
 	printf("Time: %ld.%09ld secs \n", timeElapsed_s, timeElapsed_n);
-
-	return 0;
 }
 
 void checker(Array *cords)	{
 	float distance=0;
 	int usableCoordinates=0;
 	int a;
-	#pragma omp parallel
-	{
-		#pragma omp for
-		for(a = 0; a < cords->used; a++ ){
-			if(a<=10){
-				printf("Hello world from thread %d\n", omp_get_thread_num());
-			}
-			float k = cords->cord1[a] * cords->cord1[a] + cords->cord2[a] * cords->cord2[a] + cords->cord3[a] * cords->cord3[a];
-			distance= sqrtf( k );
-			if( (distance>=12) && (distance<=30) ){
-				usableCoordinates++;
-			}
-			distance=0;
+	for(a = 0; a < cords->used; a++ ){
+		distance= sqrtf( cords->cord1[a] * cords->cord1[a] 
+				+ cords->cord2[a] * cords->cord2[a] 
+				+ cords->cord3[a] * cords->cord3[a] );
+		if((distance>=DOWNLIMIT) && (distance<=UPLIMIT)) {
+			usableCoordinates++;
 		}
+		distance=0;
 	}
-		/* 
-		*	//testing the threads
-		*  tid = omp_get_thread_num();
-		*	printf("Hello world from thread %d\n", tid);
-		*/
-	
 	printf("Number of usable cordinates = %d\n", usableCoordinates);
 }
 
 void readingFile(char *argv[], Array *cords){
-	FILE *readFile;
-	readFile = fopen(argv[3],"r");
+	FILE *readFile = fopen(argv[3],"rb");
+	//scan file find number of bites and number of primary cells
+	fseek(readFile, 0, SEEK_END);
+	int lengthOfFile = ftell(readFile);
+	int coordinate_index = lengthOfFile/4/3/3;
+	//go to the beggining of the file
+	rewind(readFile);
 	if(readFile==NULL) { //exit file if there is no data file
-		printf("Error while opening the file. Run generator.o\n");
+		printf("Error while opening the binary file. Run generator.o\n");
 		exit(0);
 	}
 	int coordinateNumberToExamine= atoi(argv[1]);
@@ -82,20 +79,22 @@ void readingFile(char *argv[], Array *cords){
 	} else {
 		initArray(cords, coordinateNumberToExamine);
 	}	
-	char line[256]; /* or other suitable maximum line size */
 	int stoper=0;
-	while (fgets(line, sizeof line, readFile) != NULL && stoper!= coordinateNumberToExamine) {
-		float value1 = atof(line);
-		fgets(line, sizeof line, readFile);
-		float value2 = atof(line);
-		fgets(line, sizeof line, readFile);
-		float value3 = atof(line);
+	//create the array from the input again
+	float cordsR[coordinate_index][3];
+	fread(cordsR, sizeof(float),coordinate_index*3,readFile);
+	//save the array of the input file opened to the
+	//struct created :D
+	//close the binary input
+	fclose(readFile);	
+	while ( stoper!=coordinate_index && stoper!= coordinateNumberToExamine) {
+		float value1 = cordsR[stoper][0];
+		float value2 = cordsR[stoper][1];
+		float value3 = cordsR[stoper][2];
 		//printf("%f %f %f\n", value1, value2, value3);
 		insertArray(cords, value1, value2, value3);
 		stoper++;
 	}
-	//printf("%f\n", cords->cord1[0]);
-	fclose(readFile);
 }
 
 void initArray(Array *a, int initialSize) {
@@ -127,4 +126,3 @@ void freeArray(Array *a) {
 	a->cord3 = NULL;
 	a->used = a->size = 0;
 }
-
