@@ -1,4 +1,5 @@
 #include "main.h"
+#include "defineBinary.h"
 
 /*
 * char *argv[] parameters:
@@ -18,8 +19,11 @@ int main (int argc, char *argv[]) {
 	
 	
 	Array cords;
-	readingFile(argv, &cords); // read datafile
-
+	if(BINARY==0) {
+		readingFileTXT(argv, &cords);
+	} else {
+		readingFileDATA(argv, &cords); // read datafile
+	}
 	struct timespec startTime, endTime;
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
 	
@@ -70,7 +74,37 @@ void checker(Array *cords, int threadsLimit)	{
 	printf("Number of usable cordinates = %d\n", usableCoordinates);
 }
 
-void readingFile(char *argv[], Array *cords){
+void readingFileTXT(char *argv[], Array *cords){
+	FILE *readFile;
+	readFile = fopen(argv[3],"r");
+	if(readFile==NULL) { //exit file if there is no data file
+		printf("Error while opening the file. Run generator.o\n");
+		exit(0);
+	}
+	int coordinateNumberToExamine= atoi(argv[1]);
+	//Array cords;
+	if(coordinateNumberToExamine==-1){
+		initArray(cords, 1000);
+	} else {
+		initArray(cords, coordinateNumberToExamine);
+	}	
+	char line[256]; /* or other suitable maximum line size */
+	int stoper=0;
+	while (fgets(line, sizeof line, readFile) != NULL && stoper!= coordinateNumberToExamine) {
+		float value1 = atof(line);
+		fgets(line, sizeof line, readFile);
+		float value2 = atof(line);
+		fgets(line, sizeof line, readFile);
+		float value3 = atof(line);
+		//printf("%f %f %f\n", value1, value2, value3);
+		insertArray(cords, value1, value2, value3);
+		stoper++;
+	}
+	//printf("%f\n", cords->cord1[0]);
+	fclose(readFile);
+}
+
+void readingFileDATA(char *argv[], Array *cords){
 	FILE *readFile = fopen(argv[3],"rb");
 	//scan file find number of bites and number of primary cells
 	fseek(readFile, 0, SEEK_END);

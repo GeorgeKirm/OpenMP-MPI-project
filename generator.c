@@ -1,4 +1,5 @@
 #include "generator.h"
+#include "defineBinary.h"
 
 int main(int argc, char *argv[]) {
 	/*
@@ -19,13 +20,23 @@ int main(int argc, char *argv[]) {
 	FILE *file  = fopen(argv[1],"w+");
 
 	srand(utime);
-	for(i=0;i<coordinate_index;i++){
-		cords[i][0]=(float)34*rand()/(RAND_MAX-1);
-		cords[i][1]=(float)34*rand()/(RAND_MAX-1);
-		cords[i][2]=(float)34*rand()/(RAND_MAX-1);
-	}
-	fwrite(cords, sizeof(*cords),coordinate_index*3,file);
+	if(BINARY==0) {
+		for(i=0;i<coordinate_index;i++){
+			fprintf(file,"%f\n%f\n%f\n", (float)34*rand()/(RAND_MAX-1),(float)34*rand()/(RAND_MAX-1),(float)34*rand()/(RAND_MAX-1));
+		}
+	} else {
+		for(i=0;i<coordinate_index;i++){
+			cords[i][0]=(float)34*rand()/(RAND_MAX-1);
+			cords[i][1]=(float)34*rand()/(RAND_MAX-1);
+			cords[i][2]=(float)34*rand()/(RAND_MAX-1);
+		}
+		fwrite(cords, sizeof(*cords),coordinate_index*3,file);
+	}	
 	fclose(file);
+	return 0;
+}
+
+	
 	/*
 	printf("%lu\n",sizeof(float));
 	printf("---palios pinakas--\n");
@@ -42,5 +53,3 @@ int main(int argc, char *argv[]) {
 	printf("%f\n%f\n%f\n", cords2[0][0],cords2[0][1],cords2[0][2]);
 	fclose(file2);
 	*/
-	return 0;
-}

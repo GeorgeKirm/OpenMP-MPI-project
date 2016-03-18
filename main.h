@@ -21,7 +21,9 @@ void printTime(struct timespec,struct timespec);
 
 void checker(Array *, int);
 
-void readingFile(char **, Array *);
+void readingFileTXT(char **, Array *);
+
+void readingFileDATA(char **, Array *);
 
 void initArray(Array *, int);
 
