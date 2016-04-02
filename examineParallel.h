@@ -14,6 +14,8 @@
 
 void printTime(struct timespec,struct timespec);
 
-void checkerOMP(char**, char*, size_t);
+void checker(char**);
+
+int checkerOMP(char**, char*, size_t);
 
 void numberOfThreads(int);

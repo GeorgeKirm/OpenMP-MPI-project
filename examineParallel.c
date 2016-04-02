@@ -9,7 +9,6 @@
 *  argv[5]: Proccesses to use MPI or -1 to mark no limit
 */
 int main (int argc, char *argv[]) {
-
 	if(argc!=6) {
 		printf("Wrong number of arguents");
 		exit(0);
@@ -19,10 +18,6 @@ int main (int argc, char *argv[]) {
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
 
 	checker(argv);
-
-	// terminate
-	fclose (pFile);
-	free (buffer);
 
 	// getting the end time of program
 	clock_gettime(CLOCK_MONOTONIC, &endTime);
@@ -55,7 +50,6 @@ void checker(Array *cords)	{
 	int processLimit = atoi(argv[5]);
 	int rank,size;
 	int error;
-	int i;
 
 	/*
 		Abort if initialize failed.
@@ -97,6 +91,7 @@ void checker(Array *cords)	{
 		printf("Reading error");
 		exit (3);
 	}
+	fclose (pFile);
 	/* the whole file is now loaded in the memory buffer. */
 
 	/*
@@ -118,52 +113,34 @@ void checker(Array *cords)	{
 	printf("Processor name is: %s\n",name);
 	#endif
 	/******************/
-	int sum;
 	int plithos=100;
 	//	MPI_Scatter(&cords,plithos,MPI_FLOAT,&sum,1,MPI_INT,0,MPI_COMM_WORLD);
 	//**** MPI coding ***//
-	if(processLimit != -1)
-	{
-		for(i = 0; i < processLimit ; i++)
-		{
-			MPI_Send(&sum,1,MPI_INT, i, i, MPI_COMM_WORLD);
-	//printf("send \n");
-		}
-	} else {
-		//Maybe use scatter
+	if((rank<processLimit) || (processLimit == -1)) {
+		/*** End MPI process initialize ***//
+		#if DEBUG1
+		printf("rank2 %d\n",rank);
+		printf("size2 %d\n",size);
+		#endif
+
+
+		/*** Local parallel ***/
+		int usableCoordinates=0;
+		numberOfThreads(atoi(argv[4]));
+		usableCoordinates = checker(argv, buffer, result);
+		free (buffer);
+		/**********************************/
+
+		//	MPI_Gather(&sum,MPI_INT,cords,plithos,1,MPI_INT,0,MPI_COM_WORLD);
+		//	MPI_Reduce(&usableCoordinates,&parallelUsableCoordinates,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+		//	MPI_Reduce(NULL,&parallelUsableCoordinates,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
+	} else { // BALE ERROR MESSAGE
 	}
-	/*** End MPI process initialize ***//
-	#if DEBUG1
-	printf("rank2 %d\n",rank);
-	printf("size2 %d\n",size);
-	#endif
-
-	
-	// Check number of threads for a CPU.
-	if(threadsLimit>0) {
-		omp_set_num_threads(threadsLimit);
-	} else {
-		//nothing to do
-	}
-	int usableCoordinates=0;
-	int parallelUsableCoordinates;
-
-	/*** Local parallel ***/
-	numberOfThreads(atoi(argv[4]));
-	usableCoordinates = checker(argv, buffer, result);
-
-	/**********************************/
-
-	sum = usableCoordinates;//----------na stelnw to athroisma me to reduce
-
-	//	MPI_Gather(&sum,MPI_INT,cords,plithos,1,MPI_INT,0,MPI_COM_WORLD);
-	//	MPI_Reduce(&usableCoordinates,&parallelUsableCoordinates,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
-	//	MPI_Reduce(NULL,&parallelUsableCoordinates,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
 	MPI_Finalize();
 	printf("Number of usable cordinates = %d\n", sum);
 }
 
-void checkerOMP(char *argv[], char* buffer, size_t bufferSize)	{
+int checkerOMP(char *argv[], char* buffer, size_t bufferSize)	{
 	int usableCoordinates=0;
 	int coordinateNumberToExamine = atoi(argv[1]);
 	if(coordinateNumberToExamine >= 0){
