@@ -7,6 +7,7 @@
 #include <string.h>
 #define DOWNLIMIT 12
 #define UPLIMIT 30
+#define LAST_RANK 7
 
 #define DEBUG 0
 #define DEBUG1 0
@@ -16,6 +17,6 @@ void printTime(struct timespec,struct timespec);
 
 void checker(char**);
 
-int checkerOMP(char**, char*, size_t);
+int checkerOMP(char**, char*, int, int);
 
 void numberOfThreads(int);

@@ -64,7 +64,7 @@ void checker(char *argv[])	{
 	FILE * pFile;
 	long lSize;
 	char * buffer;
-	size_t result;
+	size_t bufferSize;
 
 	pFile = fopen ( argv[3] , "r" );
 	if (pFile==NULL) {
@@ -85,8 +85,8 @@ void checker(char *argv[])	{
 	}
 
 	// copy the file into the buffer:
-	result = fread (buffer,1,lSize,pFile);
-	if (result != lSize) {
+	bufferSize = fread (buffer,1,lSize,pFile);
+	if (bufferSize != lSize) {
 		printf("Reading error");
 		exit (3);
 	}
@@ -126,7 +126,20 @@ void checker(char *argv[])	{
 		/*** Local parallel ***/
 		int usableCoordinates=0;
 		numberOfThreads(atoi(argv[4]));
-		usableCoordinates = checkerOMP(argv, buffer, result);
+		int startToRead = bufferSize/processLimit;
+		startToRead = startToRead*rank;
+		int endToRead = bufferSize/processLimit;
+		endToRead = endToRead*(rank+1) - 1;
+		if(processLimit == -1){
+			if(rank == LAST_RANK) {
+				endToRead = bufferSize;
+			}
+		} else {
+			if(rank == processLimit) {
+				endToRead = bufferSize;
+			}
+		}
+		usableCoordinates = checkerOMP(argv, buffer, startToread, endToRead);
 		printf("%d\n", usableCoordinates);
 		free (buffer);
 		/**********************************/
@@ -140,13 +153,13 @@ void checker(char *argv[])	{
 //	printf("Number of usable cordinates = %d\n", sum);
 }
 
-int checkerOMP(char *argv[], char* buffer, size_t bufferSize)	{
+int checkerOMP(char *argv[], char* buffer, int startToread, int endToRead)	{
 	int usableCoordinates=0;
 	int coordinateNumberToExamine = atoi(argv[1]);
 	if(coordinateNumberToExamine >= 0){
 		// coordinateNumberToExamine = atoi(argv[1]);
 	} else {
-		coordinateNumberToExamine = bufferSize/30;
+		coordinateNumberToExamine = endToRead/30;
 	}
 	#pragma omp parallel
 	{
@@ -154,7 +167,7 @@ int checkerOMP(char *argv[], char* buffer, size_t bufferSize)	{
 		int a;
 		int temp=0;
 		#pragma omp for schedule(static,1) private(a, distance)
-		for(a = 0; a < coordinateNumberToExamine*3; a=a+3 ){
+		for(a = startToread; a < endToRead*3; a=a+3 ){
 			char nLine1[10];
 			char nLine2[10];
 			char nLine3[10];
