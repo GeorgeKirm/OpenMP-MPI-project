@@ -38,7 +38,7 @@ runE: runExamineParallel
 runS: runExamineSerial
 
 runGenerate:
-	./generator.o datafile 1500
+	./generator.o datafile 4
 
 runExamineParallel:
 	./examineParallel.o -1 -1 datafile -1 -1
@@ -49,7 +49,7 @@ runExamineSerial:
 # CLEAN COMMANDS
 # vvvvvvvvvvvvvv
 
-clean: cleanE cleanS cleanDatafile cleanExecs cleanGenerate cleanClusterFiles
+clean: cleanE cleanS cleanDatafile cleanGenerate cleanClusterFiles
 
 cleanG: cleanGenerate
 

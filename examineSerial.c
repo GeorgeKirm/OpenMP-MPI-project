@@ -1,5 +1,4 @@
-#include "main2.h"
-#include "defineBinary.h"
+#include "examineSerial.h"
 
 /*
 * char *argv[] parameters:
@@ -10,7 +9,6 @@
 *  argv[5]: Proccesses to use MPI or -1 to mark no limit
 */
 int main (int argc, char *argv[]) {
-
 	if(argc!=6) {
 		printf("Wrong number of arguents");
 		exit(0);
@@ -19,6 +17,27 @@ int main (int argc, char *argv[]) {
 	struct timespec startTime, endTime;
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
 
+	checker(argv);
+
+	// getting the end time of program
+	clock_gettime(CLOCK_MONOTONIC, &endTime);
+	printTime(startTime,endTime);
+
+	return 0;
+}
+
+void printTime(struct timespec a,struct timespec b) {
+	const int DAS_NANO_SECONDS_IN_SEC = 1000000000;
+	long timeElapsed_s = b.tv_sec - a.tv_sec;
+	long timeElapsed_n = b.tv_nsec - a.tv_nsec;
+	if(timeElapsed_n < 0) {
+		timeElapsed_n = DAS_NANO_SECONDS_IN_SEC + timeElapsed_n;
+		timeElapsed_s--;
+	}
+	printf("Time: %ld.%09ld secs \n", timeElapsed_s, timeElapsed_n);
+}
+
+void checker(char *argv[]) {
 	// reading the values from the file
 	FILE * pFile;
 	long lSize;
@@ -49,34 +68,16 @@ int main (int argc, char *argv[]) {
 		printf("Reading error");
 		exit (3);
 	}
-
 	/* the whole file is now loaded in the memory buffer. */
-	
-	checker(argv, buffer, result);
-
-	// terminate
 	fclose (pFile);
+	
+	int usableCoordinates = checkerSer(argv, buffer, result);
 	free (buffer);
 
-	// getting the end time of program
-	clock_gettime(CLOCK_MONOTONIC, &endTime);
-	printTime(startTime,endTime);
-
-	return 0;
+	printf("Number of usable cordinates = %d\n", usableCoordinates);
 }
 
-void printTime(struct timespec a,struct timespec b) {
-	const int DAS_NANO_SECONDS_IN_SEC = 1000000000;
-	long timeElapsed_s = b.tv_sec - a.tv_sec;
-	long timeElapsed_n = b.tv_nsec - a.tv_nsec;
-	if(timeElapsed_n < 0) {
-		timeElapsed_n = DAS_NANO_SECONDS_IN_SEC + timeElapsed_n;
-		timeElapsed_s--;
-	}
-	printf("Time: %ld.%09ld secs \n", timeElapsed_s, timeElapsed_n);
-}
-
-void checker(char *argv[], char* buffer, size_t bufferSize)	{
+int checkerSer(char *argv[], char* buffer, size_t bufferSize)	{
 	float distance=0;
 	int usableCoordinates=0;
 	int a;
@@ -115,5 +116,6 @@ void checker(char *argv[], char* buffer, size_t bufferSize)	{
 		}
 		distance=0;
 	}
-	printf("Number of usable cordinates = %d\n", usableCoordinates);
+	//printf("Number of usable cordinates = %d\n", usableCoordinates);
+	return usableCoordinates;
 }
