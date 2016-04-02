@@ -16,20 +16,50 @@ int main (int argc, char *argv[]) {
 		exit(0);
 	}
 
-	
-	
-	Array cords;
-	if(BINARY==0) {
-		readingFileTXT(argv, &cords);
-	} else {
-		readingFileDATA(argv, &cords); // read datafile
-	}
 	struct timespec startTime, endTime;
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
+
+	numberOfThreads(atoi(argv[4]));
+	// reading the values from the file
+	FILE * pFile;
+	long lSize;
+	char * buffer;
+	size_t result;
+
+	pFile = fopen ( argv[3] , "r" );
+	if (pFile==NULL) {
+		printf("File error");
+		exit (1);
+	}
+
+	// obtain file size:
+	fseek (pFile , 0 , SEEK_END);
+	lSize = ftell (pFile);
+	rewind (pFile);
+
+	// allocate memory to contain the whole file:
+	buffer = (char*) malloc (sizeof(char)*lSize);
+	if (buffer == NULL) {
+		printf("Memory error");
+		exit (2);
+	}
+
+	// copy the file into the buffer:
+	result = fread (buffer,1,lSize,pFile);
+	if (result != lSize) {
+		printf("Reading error");
+		exit (3);
+	}
+
+	/* the whole file is now loaded in the memory buffer. */
 	
-	//printf("%f\n", cords.cord1[0]);
-	checker(&cords, atoi(argv[4])); // Do the things
-	// getting time of program
+	checker(argv, buffer, result);
+
+	// terminate
+	fclose (pFile);
+	free (buffer);
+
+	// getting the end time of program
 	clock_gettime(CLOCK_MONOTONIC, &endTime);
 	printTime(startTime,endTime);
 
@@ -47,157 +77,53 @@ void printTime(struct timespec a,struct timespec b){
 	printf("Time: %ld.%09ld secs \n", timeElapsed_s, timeElapsed_n);
 }
 
-void checker(Array *cords, int threadsLimit)	{
+void numberOfThreads(int threadsLimit) {
 	if(threadsLimit>0) {
 		omp_set_num_threads(threadsLimit);
 	} else {
 		//nothing to do
 	}
+}
+
+void checker(char *argv[], char* buffer, size_t bufferSize)	{
 	int usableCoordinates=0;
+	int coordinateNumberToExamine = atoi(argv[1]);
+	if(coordinateNumberToExamine >= 0){
+		// coordinateNumberToExamine = atoi(argv[1]);
+	} else {
+		coordinateNumberToExamine = bufferSize/30;
+	}
 	#pragma omp parallel
 	{
 		float distance=0;
 		int a;
 		int temp=0;
 		#pragma omp for schedule(static,1) private(a, distance)
-		for(a = 0; a < cords->used; a++ ){
-			float k = cords->cord1[a] * cords->cord1[a] + cords->cord2[a] * cords->cord2[a] + cords->cord3[a] * cords->cord3[a];
-			distance= sqrtf( k );
+		for(a = 0; a < coordinateNumberToExamine; a++ ){
+			char nLine1[10];
+			char nLine2[10];
+			char nLine3[10];
+			float value[3];
+			strncpy(nLine1,buffer+(a*10),9);
+			strncpy(nLine2,buffer+(a*10+10),9);
+			strncpy(nLine3,buffer+(a*10+20),9);
+			nLine1[10] = '\0';
+			nLine2[10] = '\0';
+			nLine3[10] = '\0';
+			value[0] = atof(nLine1);
+			value[1] = atof(nLine2);
+			value[2] = atof(nLine3);
+			//printf("D %d\n", omp_get_thread_num());
+			distance= sqrtf(value[0]*value[0] 
+					+ value[1]*value[1] + value[2]*value[2]);
 			if((distance>=DOWNLIMIT) && (distance<=UPLIMIT)) {
 				temp++;
 			}
 			distance=0;
 		}
+		//printf("%d: %d\n", omp_get_thread_num(), temp);
 		#pragma omp critical
 			usableCoordinates = usableCoordinates+temp;
 	}
 	printf("Number of usable cordinates = %d\n", usableCoordinates);
 }
-
-void readingFileTXT(char *argv[], Array *cords){
-	FILE *readFile;
-	readFile = fopen(argv[3],"r");
-	if(readFile==NULL) { //exit file if there is no data file
-		printf("Error while opening the file. Run generator.o\n");
-		exit(0);
-	}
-	int coordinateNumberToExamine= atoi(argv[1]);
-	//Array cords;
-	if(coordinateNumberToExamine==-1){
-		initArray(cords, 1000);
-	} else {
-		initArray(cords, coordinateNumberToExamine);
-	}	
-	char line[256]; /* or other suitable maximum line size */
-	int stoper=0;
-	while (fgets(line, sizeof line, readFile) != NULL && stoper!= coordinateNumberToExamine) {
-		float value1 = atof(line);
-		fgets(line, sizeof line, readFile);
-		float value2 = atof(line);
-		fgets(line, sizeof line, readFile);
-		float value3 = atof(line);
-		//printf("%f %f %f\n", value1, value2, value3);
-		insertArray(cords, value1, value2, value3);
-		stoper++;
-	}
-	//printf("%f\n", cords->cord1[0]);
-	fclose(readFile);
-}
-
-void readingFileDATA(char *argv[], Array *cords){
-	FILE *readFile = fopen(argv[3],"rb");
-	//scan file find number of bites and number of primary cells
-	fseek(readFile, 0, SEEK_END);
-	int lengthOfFile = ftell(readFile);
-	int coordinate_index = lengthOfFile/4/3/3;
-	//go to the beggining of the file
-	rewind(readFile);
-	if(readFile==NULL) { //exit file if there is no data file
-		printf("Error while opening the binary file. Run generator.o\n");
-		exit(0);
-	}
-	int coordinateNumberToExamine= atoi(argv[1]);
-	//Array cords;
-	if(coordinateNumberToExamine==-1){
-		initArray(cords, 1000);
-	} else {
-		initArray(cords, coordinateNumberToExamine);
-	}	
-	int stoper=0;
-	//create the array from the input again
-	float cordsR[coordinate_index][3];
-	fread(cordsR, sizeof(float),coordinate_index*3,readFile);
-	//save the array of the input file opened to the
-	//struct created :D
-	//close the binary input
-	fclose(readFile);	
-	while ( stoper!=coordinate_index && stoper!= coordinateNumberToExamine) {
-		float value1 = cordsR[stoper][0];
-		float value2 = cordsR[stoper][1];
-		float value3 = cordsR[stoper][2];
-		//printf("%f %f %f\n", value1, value2, value3);
-		insertArray(cords, value1, value2, value3);
-		stoper++;
-	}
-
-/*
-	FILE *readFile;
-	readFile = fopen(argv[3],"r");
-	if(readFile==NULL) { //exit file if there is no data file
-		printf("Error while opening the file. Run generator.o\n");
-		exit(0);
-	}
-	int coordinateNumberToExamine= atoi(argv[1]);
-	//Array cords;
-	if(coordinateNumberToExamine==-1){
-		initArray(cords, 1000);
-	} else {
-		initArray(cords, coordinateNumberToExamine);
-	}	
-	char line[256]; 
-	int stoper=0;
-	while (fgets(line, sizeof line, readFile) != NULL && stoper!= coordinateNumberToExamine) {
-		float value1 = atof(line);
-		fgets(line, sizeof line, readFile);
-		float value2 = atof(line);
-		fgets(line, sizeof line, readFile);
-		float value3 = atof(line);
-		//printf("%f %f %f\n", value1, value2, value3);
-		insertArray(cords, value1, value2, value3);
-		stoper++;
-	}
-	//printf("%f\n", cords->cord1[0]);
-	fclose(readFile);
-//*/
-}
-
-void initArray(Array *a, int initialSize) {
-	a->cord1 = (float *)malloc(initialSize * sizeof(float));
-	a->cord2 = (float *)malloc(initialSize * sizeof(float));
-	a->cord3 = (float *)malloc(initialSize * sizeof(float));
-	a->used = 0;
-	a->size = initialSize;
-}
-
-void insertArray(Array *a, float value1, float value2, float value3) {
-	if (a->used == a->size) {
-		a->size *= 2;
-		a->cord1 = (float *)realloc(a->cord1, a->size * sizeof(float));
-		a->cord2 = (float *)realloc(a->cord2, a->size * sizeof(float));
-		a->cord3 = (float *)realloc(a->cord3, a->size * sizeof(float));
-	}
-	a->cord1[a->used++] = value1;
-	a->cord2[a->used] = value2;
-	a->cord3[a->used] = value3;
-}
-
-void freeArray(Array *a) {
-	free(a->cord1);
-	free(a->cord2);
-	free(a->cord3);
-	a->cord1 = NULL;
-	a->cord2 = NULL;
-	a->cord3 = NULL;
-	a->used = a->size = 0;
-}
-
