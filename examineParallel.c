@@ -45,8 +45,7 @@ void numberOfThreads(int threadsLimit) {
 	}
 }
 
-void checker(Array *cords)	{
-	int threadsLimit = atoi(argv[4]);
+void checker(char *argv[])	{
 	int processLimit = atoi(argv[5]);
 	int rank,size;
 	int error;
@@ -113,11 +112,11 @@ void checker(Array *cords)	{
 	printf("Processor name is: %s\n",name);
 	#endif
 	/******************/
-	int plithos=100;
+
 	//	MPI_Scatter(&cords,plithos,MPI_FLOAT,&sum,1,MPI_INT,0,MPI_COMM_WORLD);
 	//**** MPI coding ***//
 	if((rank<processLimit) || (processLimit == -1)) {
-		/*** End MPI process initialize ***//
+		/*** End MPI process initialize ***/
 		#if DEBUG1
 		printf("rank2 %d\n",rank);
 		printf("size2 %d\n",size);
@@ -127,7 +126,8 @@ void checker(Array *cords)	{
 		/*** Local parallel ***/
 		int usableCoordinates=0;
 		numberOfThreads(atoi(argv[4]));
-		usableCoordinates = checker(argv, buffer, result);
+		usableCoordinates = checkerOMP(argv, buffer, result);
+		printf("%d\n", usableCoordinates);
 		free (buffer);
 		/**********************************/
 
@@ -137,7 +137,7 @@ void checker(Array *cords)	{
 	} else { // BALE ERROR MESSAGE
 	}
 	MPI_Finalize();
-	printf("Number of usable cordinates = %d\n", sum);
+//	printf("Number of usable cordinates = %d\n", sum);
 }
 
 int checkerOMP(char *argv[], char* buffer, size_t bufferSize)	{
