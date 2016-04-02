@@ -9,7 +9,6 @@ int main(int argc, char *argv[]) {
 		printf("Wrong number of arguents. Exiting program");
 		return 0;
 	}
-	//printf("%s %s %d\n",argv[1],argv[2],atoi(argv[2]));
 	int coordinate_index = atoi(argv[2]);
 	int utime;
 	long int ltime;
@@ -18,20 +17,10 @@ int main(int argc, char *argv[]) {
 	ltime = time(NULL);
 	utime = (unsigned int) ltime/2;
 	FILE *file  = fopen(argv[1],"w+");
-
 	srand(utime);
-	if(BINARY==0) {
-		for(i=0;i<coordinate_index;i++){
-			fprintf(file,"%9.6f\n%9.6f\n%9.6f\n", (float)34*rand()/(RAND_MAX-1),(float)34*rand()/(RAND_MAX-1),(float)34*rand()/(RAND_MAX-1));
-		}
-	} else {
-		for(i=0;i<coordinate_index;i++){
-			cords[i][0]=(float)34*rand()/(RAND_MAX-1);
-			cords[i][1]=(float)34*rand()/(RAND_MAX-1);
-			cords[i][2]=(float)34*rand()/(RAND_MAX-1);
-		}
-		fwrite(cords, sizeof(*cords),coordinate_index*3,file);
-	}	
+	for(i=0;i<coordinate_index;i++){
+		fprintf(file,"%f\n%f\n%f\n", (float)34*rand()/(RAND_MAX-1),(float)34*rand()/(RAND_MAX-1),(float)34*rand()/(RAND_MAX-1));
+	}
 	fclose(file);
 	return 0;
 }

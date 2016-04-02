@@ -1,41 +1,73 @@
 CC = gcc
+MC = mpicc
 CFLAGS = -Wall -g
 LIBS = -L/path/to/libs -lm
 
+# fast command
+easy: buildGenerate buildExamineParallel runGenerate  runExamineParallel
 
-all: generate examine examine2
+# BUILD COMMANDS
+# vvvvvvvvvvvvvv
 
-buildG: generate
+all: buildGenerate buildExamineParallel buildExamineSerial
 
-buildE: examine
+buildG: buildGenerate
 
-buildS: examine2
+buildE: buildExamineParallel
 
-run: runG runE runS
+buildS: buildExamineSerial
 
-examine: main.c main.h defineBinary.h
-	$(CC) $(CFLAGS) -fopenmp main.c main.h defineBinary.h -o main.o $(LIBS)
+buildExamineParallel: examineParallel.c examineParallel.h
+	$(MC) $(CFLAGS) -fopenmp examineParallel.c examineParallel.h -o examineParallel.o $(LIBS)
 
-examine2: main2.c main2.h defineBinary.h
-	$(CC) $(CFLAGS) main2.c main2.h defineBinary.h -o main2.o $(LIBS)
+buildExamineSerial: examineSerial.c examineSerial.h
+	$(CC) $(CFLAGS) examineSerial.c examineSerial.h -o examineSerial.o $(LIBS)
 
-generate: generator.c generator.h defineBinary.h
-	$(CC) $(CFLAGS) generator.c generator.h defineBinary.h -o generator.o
+buildGenerate: generator.c generator.h
+	$(CC) $(CFLAGS) generator.c generator.h -o generator.o
 
-runE:
-	./main.o -1 -1 datafile -1 -1
+# RUN COMMANDS
+# vvvvvvvvvvvv
 
-runS:
-	./main2.o -1 -1 datafile -1 -1
+run: runGenerate runExamineParallel runExamineSerial
 
-runG:
-	./generator.o datafile 15000000
+runG: runGenerate
 
-clean:
-	rm -rf *.o datafile
+runE: runExamineParallel
 
-cleanE:
-	rm -rf main.o
+runS: runExamineSerial
 
-cleanS:
-	rm -rf main2.o
+runGenerate:
+	./generator.o datafile 1500
+
+runExamineParallel:
+	./examineParallel.o -1 -1 datafile -1 -1
+
+runExamineSerial:
+	./examineSerial.o -1 -1 datafile -1 -1
+
+# CLEAN COMMANDS
+# vvvvvvvvvvvvvv
+
+clean: cleanE cleanS cleanDatafile cleanExecs cleanGenerate cleanClusterFiles
+
+cleanG: cleanGenerate
+
+cleanE: cleanExamineParallel
+
+cleanS: cleanExamineSerial
+
+cleanDatafile:
+	rm -rf datafile 
+
+cleanExamineParallel:
+	rm -rf examineParallel.o
+
+cleanExamineSerial:
+	rm -rf examineSerial.o
+
+cleanGenerate:
+	rm -rf generator.o
+
+cleanClusterFiles:
+	rm -rf testing.*
