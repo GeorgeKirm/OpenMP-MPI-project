@@ -56,6 +56,8 @@ void checker(char *argv[])	{
 	error = MPI_Init(NULL, NULL);
 	if(error != MPI_SUCCESS) MPI_Abort(MPI_COMM_WORLD,error);
 
+	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+	MPI_Comm_size(MPI_COMM_WORLD,&size);
 
 	/*
 		vvv Start of reading file vvv
@@ -97,11 +99,9 @@ void checker(char *argv[])	{
 		^^^ End of reading file ^^^
 	*/
 
-	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-	MPI_Comm_size(MPI_COMM_WORLD,&size);
 	/*****************/
 	//*** Debuging ***/
-	#if DEBUG1 
+	#if DEBUG1
 	printf("rank %d\n",rank);
 	printf("size %d\n",size);
 	#endif
@@ -126,12 +126,14 @@ void checker(char *argv[])	{
 		/*** Local parallel ***/
 		int usableCoordinates=0;
 		numberOfThreads(atoi(argv[4]));
-		int startToRead = bufferSize/processLimit;
+		//
+		bufferSize = bufferSize/30;
+		size_t startToRead = bufferSize/size;
 		startToRead = startToRead*rank;
-		int endToRead = bufferSize/processLimit;
-		endToRead = endToRead*(rank+1) - 1;
+		size_t endToRead = bufferSize/size;
+		endToRead = endToRead*(rank+1);
 		if(processLimit == -1){
-			if(rank == LAST_RANK) {
+			if(rank == size-1) {
 				endToRead = bufferSize;
 			}
 		} else {
@@ -139,8 +141,10 @@ void checker(char *argv[])	{
 				endToRead = bufferSize;
 			}
 		}
-		usableCoordinates = checkerOMP(argv, buffer, startToread, endToRead);
-		printf("%d\n", usableCoordinates);
+		//printf("rank: %d/%d, start: %zu, end: %zu, buffer: %zu\n", rank, size, startToRead, endToRead, bufferSize);
+		// */
+		usableCoordinates = checkerOMP(rank, argv, buffer, startToRead, endToRead);
+		printf("usableCoordinates: %d\n", usableCoordinates);
 		free (buffer);
 		/**********************************/
 
@@ -153,21 +157,22 @@ void checker(char *argv[])	{
 //	printf("Number of usable cordinates = %d\n", sum);
 }
 
-int checkerOMP(char *argv[], char* buffer, int startToread, int endToRead)	{
+int checkerOMP(int rank, char *argv[], char* buffer, size_t startToread, size_t endToRead)	{
 	int usableCoordinates=0;
 	int coordinateNumberToExamine = atoi(argv[1]);
-	if(coordinateNumberToExamine >= 0){
-		// coordinateNumberToExamine = atoi(argv[1]);
-	} else {
-		coordinateNumberToExamine = endToRead/30;
+	if(coordinateNumberToExamine >= 0) {
+		if(endToRead > coordinateNumberToExamine) {
+			endToRead = coordinateNumberToExamine;
+		}
 	}
+//	printf("%zu, %zu\n", startToread, endToRead);
 	#pragma omp parallel
 	{
 		float distance=0;
 		int a;
 		int temp=0;
 		#pragma omp for schedule(static,1) private(a, distance)
-		for(a = startToread; a < endToRead*3; a=a+3 ){
+		for(a = startToread*3; a < endToRead*3; a=a+3 ){
 			char nLine1[10];
 			char nLine2[10];
 			char nLine3[10];
@@ -182,9 +187,9 @@ int checkerOMP(char *argv[], char* buffer, int startToread, int endToRead)	{
 			value[1] = atof(nLine2);
 			value[2] = atof(nLine3);
 			/*/
-			printf("%d %f %f %f\n", omp_get_thread_num(), value[0], value[1], value[2]);
-			printf("%d %f\n",value[0]*value[0] + value[1]*value[1] + value[2]*value[2]);
-			//*/
+			printf("%d: %f %f %f\n", rank, value[0], value[1], value[2]);
+			printf("%f\n", value[0]*value[0] + value[1]*value[1] + value[2]*value[2]);
+			// */
 			distance= sqrtf(value[0]*value[0] 
 					+ value[1]*value[1] + value[2]*value[2]);
 			if((distance>=DOWNLIMIT) && (distance<=UPLIMIT)) {

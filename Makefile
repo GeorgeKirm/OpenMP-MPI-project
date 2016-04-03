@@ -41,7 +41,7 @@ runGenerate:
 	./generator.o datafile 1000000
 
 runExamineParallel:
-	./examineParallel.o -1 -1 datafile -1 -1
+	./examineParallel.o -1 -1 datafile -1 3
 
 runExamineSerial:
 	./examineSerial.o -1 -1 datafile -1 -1
