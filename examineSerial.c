@@ -104,7 +104,7 @@ int checkerSer(char *argv[], char* buffer, size_t bufferSize)	{
 		value[1] = atof(nLine2);
 		value[2] = atof(nLine3);
 		/*/
-		printf("1. %f\n",value[0]);
+		printf("%f %f %f\n", value[0], value[1], value[2]);
 		printf("2. %f\n",value[1]);
 		printf("3. %f\n",value[2]);
 		printf("L. %f\n",value[0]*value[0] + value[1]*value[1] + value[2]*value[2]);
