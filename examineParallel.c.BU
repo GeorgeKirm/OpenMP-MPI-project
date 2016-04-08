@@ -17,13 +17,12 @@ int main (int argc, char *argv[]) {
 	struct timespec startTime, endTime;
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
 
-	int rank = checker(argv);
+	checker(argv);
 
 	// getting the end time of program
-	if (rank == 0) {
-		clock_gettime(CLOCK_MONOTONIC, &endTime);
-		printTime(startTime,endTime);
-	}
+	clock_gettime(CLOCK_MONOTONIC, &endTime);
+	printTime(startTime,endTime);
+
 	return 0;
 }
 
@@ -46,7 +45,7 @@ void numberOfThreads(int threadsLimit) {
 	}
 }
 
-int checker(char *argv[])	{
+void checker(char *argv[])	{
 	int processLimit = atoi(argv[5]);
 	int rank,size;
 	int error;
@@ -62,29 +61,21 @@ int checker(char *argv[])	{
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 	MPI_Comm_size(MPI_COMM_WORLD,&size);
 
-	if((size < processLimit) || (processLimit == -1)) {
-		    //size == all thread
-	} else {
-		    size = processLimit;
-	}
-	int coordinatesToExamine = atoi(argv[1]);
-	if(coordinatesToExamine > 0) {
-		if(coordinatesToExamine < size) {
-			size = coordinatesToExamine;
-		}
-	}
-	if(rank < size) {
+        if((size < processLimit) || (processLimit == -1)) {
+                //size == all thread
+        } else {
+                size = processLimit;
+        }
+        if(rank < size) {
+
 	/*
 		vvv Start of reading file vvv
 	*/
 		// reading the values from the file
 		FILE * pFile;
 		long lSize, lSizeF;
-		long lSizeL = 0;
 		char * buffer;
 		size_t bufferSize;
-		int usableCoordinates = 0;
-		int breaker = 2;
 
 		pFile = fopen ( argv[3] , "r" );
 		if (pFile==NULL) {
@@ -96,74 +87,61 @@ int checker(char *argv[])	{
 		fseek (pFile , 0 , SEEK_END);
 		lSizeF = ftell (pFile);
 		rewind (pFile);
-		
-		if(lSizeF > MALLOC_SIZE*2) {
-			lSize = MALLOC_SIZE;
-		} else {
-			lSize = lSizeF;
-			breaker--;
+		lSize = lSizeF;
+
+
+							
+		bufferSize = lSize;
+                bufferSize = bufferSize/(3*BITS_LINE);
+                size_t startToRead = (bufferSize % size) ? bufferSize/size + 1 : bufferSize/size;
+                size_t endToRead = startToRead;
+		startToRead = startToRead*rank*(3*BITS_LINE);
+                endToRead = endToRead*(rank+1)*(3*BITS_LINE);
+		if(processLimit == -1){
+                        if(rank == size-1) {
+                                endToRead = bufferSize*(3*BITS_LINE);
+                        }
+                } else {
+                        if(rank == processLimit) {
+                                endToRead = bufferSize*(3*BITS_LINE);
+                        }
+                }
+							
+		// allocate memory to contain the whole file
+//		printf("vvv\n%d: %zu %zu\n^^^\n", rank, startToRead, endToRead);
+        	buffer = (char*) malloc (sizeof(char)*(endToRead-startToRead)+1);
+		if (buffer == NULL) {
+			printf("Memory error");
+			exit (2);
 		}
 
-		do {
-			
-			bufferSize = lSize - lSizeL;
-        	        bufferSize = bufferSize/(3*BITS_LINE);
-               		size_t startToRead = (bufferSize % size) ? bufferSize/size + 1 : bufferSize/size;
-               		size_t endToRead = startToRead;
-			startToRead = startToRead*rank*(3*BITS_LINE);
-               	 	endToRead = endToRead*(rank+1)*(3*BITS_LINE);
-			if(processLimit == -1){
-                	        if(rank == size-1) {
-                        	        endToRead = bufferSize*(3*BITS_LINE);
-                        	}
-                	} else {
-                        	if(rank == processLimit) {
-                                	endToRead = bufferSize*(3*BITS_LINE);
-                        	}
-                	}
-							
-			// allocate memory to contain the whole file
-			//printf("vvv\n%d: %zu %zu\n^^^\n", rank, startToRead, endToRead);
-        		buffer = (char*) malloc (sizeof(char)*(endToRead-startToRead)+1);
-			if (buffer == NULL) {
-				printf("Memory error");
-				exit (2);
-			}
+		// copy the file into the buffer:
+		fseek(pFile ,startToRead , SEEK_SET);
+		bufferSize = fread (buffer, 1, endToRead - startToRead, pFile);
+		buffer[endToRead-startToRead] = '\0';
+//		printf("\nVVVVV\n%d: %s\n^^^^^\n", rank, buffer);
 
-			// copy the file into the buffer:
-			fseek(pFile ,startToRead+lSizeL , SEEK_SET);
-			bufferSize = fread (buffer, 1, endToRead - startToRead, pFile);
-			buffer[endToRead-startToRead] = '\0';
-//			printf("\nVVVVV\n%d: %s\n^^^^^\n", rank, buffer);
-
-//			fclose (pFile);
+//		fclose (pFile);
 		/* the whole file is now loaded in the memory buffer. */
 
 		/*
 			^^^ End of reading file ^^^
 		*/
 
-			#if DEBUG1
-				printf("rank %d\n",rank);
-				printf("size %d\n",size);
-				char name[100];
-				int len;
-				MPI_Get_processor_name(name, &len);
-				printf("Processor name is: %s\n",name);
-			#endif
+		#if DEBUG1
+			printf("rank %d\n",rank);
+			printf("size %d\n",size);
+			char name[100];
+			int len;
+			MPI_Get_processor_name(name, &len);
+			printf("Processor name is: %s\n",name);
+		#endif
 
-			numberOfThreads(atoi(argv[4]));
-			usableCoordinates = checkerOMP(rank, buffer, bufferSize) + usableCoordinates;
-			//printf("usableCoordinates in rank %d: %d\n",rank, usableCoordinates);
-			free (buffer);
-			lSizeL = lSize;
-			lSize = lSize + MALLOC_SIZE;
-			if( lSize > lSizeF ) {
-				lSize = lSizeF;
-				breaker--;
-			}
-			//printf("\nLOULA\n\n");
-		} while(breaker > 0);
+		numberOfThreads(atoi(argv[4]));
+		int usableCoordinates = 0;
+		usableCoordinates = checkerOMP(rank, argv, buffer, bufferSize);
+		//printf("usableCoordinates in rank %d: %d\n",rank, usableCoordinates);
+		free (buffer);
 
 		MPI_Reduce(&usableCoordinates,&sum,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
 
@@ -172,15 +150,19 @@ int checker(char *argv[])	{
 	}
 //	MPI_Barrier(MPI_COMM_WORLD);
 	MPI_Finalize();
-	if(rank == 0) {
+	if(rank == 0)
 		printf("\nNumber of usable cordinates = %d\n", sum);
-	}
-	return rank;
 }
 
-int checkerOMP(int rank, char* buffer, size_t bufferSize)	{
+int checkerOMP(int rank, char *argv[], char* buffer, size_t bufferSize) {//size_t startToread, size_t endToRead)	{
+	int usableCoordinates=0;
+	int coordinateNumberToExamine = atoi(argv[1]);
+	if(coordinateNumberToExamine >= 0) {
+		if(bufferSize/30 > coordinateNumberToExamine) {
+			bufferSize = coordinateNumberToExamine;
+		}
+	}
 //	printf("%zu, %zu\n", startToread, endToRead);
-	int usableCoordinates = 0;
 	#pragma omp parallel
 	{
 		float distance=0;

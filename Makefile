@@ -38,10 +38,10 @@ runE: runExamineParallel
 runS: runExamineSerial
 
 runGenerate:
-	./generator.o datafile 150000000
+	./generator.o datafile 15000000
 
 runExamineParallel:
-	./examineParallel.o -1 -1 datafile -1 3
+	./examineParallel.o -1 -1 datafile -1 -1
 
 runExamineSerial:
 	./examineSerial.o -1 -1 datafile -1 -1
@@ -59,6 +59,8 @@ cleanS: cleanExamineSerial
 
 cleanT: cleanClusterFiles
 
+cleanD: cleanDatafile
+
 cleanDatafile:
 	rm -rf datafile 
 
@@ -73,3 +75,8 @@ cleanGenerate:
 
 cleanClusterFiles:
 	rm -rf testing.*
+
+
+#delete me
+buildBU: examineParallelBU.c examineParallel.h
+	$(MC) $(CFLAGS) -fopenmp examineParallelBU.c examineParallel.h -o examineParallel.o $(LIBS)
