@@ -1,41 +1,82 @@
 CC = gcc
+MC = mpicc
 CFLAGS = -Wall -g
 LIBS = -L/path/to/libs -lm
 
+# fast command
+easy: buildGenerate buildExamineParallel runGenerate  runExamineParallel
 
-all: generate examine examine2
+# BUILD COMMANDS
+# vvvvvvvvvvvvvv
 
-buildG: generate
+all: buildGenerate buildExamineParallel buildExamineSerial
 
-buildE: examine
+buildG: buildGenerate
 
-buildS: examine2
+buildE: buildExamineParallel
 
-run: runG runE runS
+buildS: buildExamineSerial
 
-examine: main.c main.h defineBinary.h
-	$(CC) $(CFLAGS) -fopenmp main.c main.h defineBinary.h -o main.o $(LIBS)
+buildExamineParallel: examineParallel.c examineParallel.h
+	$(MC) $(CFLAGS) -fopenmp examineParallel.c examineParallel.h -o examineParallel.o $(LIBS)
 
-examine2: main2.c main2.h defineBinary.h
-	$(CC) $(CFLAGS) main2.c main2.h defineBinary.h -o main2.o $(LIBS)
+buildExamineSerial: examineSerial.c examineSerial.h
+	$(CC) $(CFLAGS) examineSerial.c examineSerial.h -o examineSerial.o $(LIBS)
 
-generate: generator.c generator.h defineBinary.h
-	$(CC) $(CFLAGS) generator.c generator.h defineBinary.h -o generator.o
+buildGenerate: generator.c generator.h
+	$(CC) $(CFLAGS) generator.c generator.h -o generator.o
 
-runE:
-	./main.o -1 -1 datafile -1 -1
+# RUN COMMANDS
+# vvvvvvvvvvvv
 
-runS:
-	./main2.o -1 -1 datafile -1 -1
+run: runGenerate runExamineParallel runExamineSerial
 
-runG:
+runG: runGenerate
+
+runE: runExamineParallel
+
+runS: runExamineSerial
+
+runGenerate:
 	./generator.o datafile 15000000
 
-clean:
-	rm -rf *.o datafile
+runExamineParallel:
+	./examineParallel.o -1 -1 datafile -1 -1
 
-cleanE:
-	rm -rf main.o
+runExamineSerial:
+	./examineSerial.o -1 -1 datafile -1 -1
 
-cleanS:
-	rm -rf main2.o
+# CLEAN COMMANDS
+# vvvvvvvvvvvvvv
+
+clean: cleanE cleanS cleanDatafile cleanGenerate cleanClusterFiles
+
+cleanG: cleanGenerate
+
+cleanE: cleanExamineParallel
+
+cleanS: cleanExamineSerial
+
+cleanT: cleanClusterFiles
+
+cleanD: cleanDatafile
+
+cleanDatafile:
+	rm -rf datafile 
+
+cleanExamineParallel:
+	rm -rf examineParallel.o
+
+cleanExamineSerial:
+	rm -rf examineSerial.o
+
+cleanGenerate:
+	rm -rf generator.o
+
+cleanClusterFiles:
+	rm -rf testing.*
+
+
+#delete me
+buildBU: examineParallelBU.c examineParallel.h
+	$(MC) $(CFLAGS) -fopenmp examineParallelBU.c examineParallel.h -o examineParallel.o $(LIBS)

@@ -1,1 +1,0 @@
-#define BINARY 0
