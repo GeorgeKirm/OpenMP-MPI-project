@@ -128,7 +128,7 @@ int checker(char *argv[])	{
 	}
 	//update_string(argv[2]);
 	//time_limit = atof(argv[2]);
-	double time_limit = strtod(argv[2],NULL);
+//	double time_limit = strtod(argv[2],NULL);
         if(rank < size) {
 	/*
 		vvv Start of reading file vvv
@@ -210,7 +210,8 @@ int checker(char *argv[])	{
 			#endif
 
 			numberOfThreads(atoi(argv[4]));
-			usableCoordinates = checkerOMP(rank, buffer, bufferSize,&time_limit) + usableCoordinates;
+			//usableCoordinates = checkerOMP(rank, buffer, bufferSize,&time_limit) + usableCoordinates;
+			usableCoordinates = checkerOMP(rank, buffer, bufferSize) + usableCoordinates;
 			//printf("usableCoordinates in rank %d: %d\n",rank, usableCoordinates);
 			free (buffer);
 			lSizeL = lSize;
@@ -252,14 +253,15 @@ int checker(char *argv[])	{
  *this way we can stop checkers while from continue calling the for and stop the certain time the user wanted
  *used from checker function in order to split the proccessing of the data to the threads
  */
-int checkerOMP(int rank, char* buffer, size_t bufferSize,double *time_limit)	{
+//int checkerOMP(int rank, char* buffer, size_t bufferSize,double *time_limit)	{
+int checkerOMP(int rank, char* buffer, size_t bufferSize)	{
 //	printf("%zu, %zu\n", startToread, endToRead);
 	int usableCoordinates=0;
-	if((*time_limit>0)||(*time_limit==-1)){
+	//if((*time_limit>0)||(*time_limit==-1)){
 		double tstart = omp_get_wtime();
-		int flag=0;
-		double tend =0;
-		#pragma omp parallel shared(flag,tend)
+		//int flag=0;
+		//double tend =0;
+		#pragma omp parallel //shared(flag,tend)
 		{
 			float distance=0;
 			int a;
@@ -269,7 +271,7 @@ int checkerOMP(int rank, char* buffer, size_t bufferSize,double *time_limit)	{
 			#pragma omp for schedule(static,1) private(a, distance)
 			for(a = 0; a < bufferSize/10; a = a+3) {
 	//		for(a = startToread/BITS_LINE; a < endToRead/BITS_LINE; a=a+3 ){
-				if(flag==1) continue;
+				//if(flag==1) continue;
 				char nLine1[BITS_LINE];
 				char nLine2[BITS_LINE];
 				char nLine3[BITS_LINE];
@@ -287,24 +289,24 @@ int checkerOMP(int rank, char* buffer, size_t bufferSize,double *time_limit)	{
 				printf("%d: %f %f %f\n", rank, value[0], value[1], value[2]);
 				//printf("%f\n", value[0]*value[0] + value[1]*value[1] + value[2]*value[2]);
 				// */
-				distance= sqrtf(value[0]*value[0] 
-						+ value[1]*value[1] + value[2]*value[2]);
+				distance= sqrtf(value[0]*value[0] + value[1]*value[1] + value[2]*value[2]);
 				if((distance>=DOWNLIMIT) && (distance<=UPLIMIT)) {
 					temp++;
 				}
 				distance=0;
+				/*
 				tend = (double)(omp_get_wtime() - tstart);
 				if ((*time_limit>0)&&(tend>0)&&(tend >= *time_limit)){
 					flag=1;
 					*time_limit=-1;
-				}
+				}*/
 			}
 			//printf("%d: %d\n", omp_get_thread_num(), temp);
 			#pragma omp critical
 				usableCoordinates = usableCoordinates+temp;
 		}
 		return usableCoordinates;		
-	}
+	//}
 	//printf("Number of usable cordinates = %d\n", usableCoordinates);
 	return usableCoordinates;
 }
