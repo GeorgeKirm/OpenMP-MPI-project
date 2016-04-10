@@ -20,6 +20,5 @@ void printTime(struct timespec,struct timespec);
 int checker(char**);
 
 int checkerOMP(int, char*, size_t,double*);
-//int checkerOMP(int, char**, char*, size_t, size_t);
-//int checkerOMP(int, char**, char*, MPI_Offset, MPI_Offset);
+
 void numberOfThreads(int);
