@@ -8,6 +8,19 @@
 *  argv[4]: Thread that are being used or -1 to mark no limit
 *  argv[5]: Proccesses to use MPI or -1 to mark no limit
 */
+
+/**main
+ *
+ *This function is the main which calls the other to work
+ *has 2 variables for input argc and argv[]
+ *argc is the number of the argv cells
+ *argv values are explained above
+ *So main checks the number of argv values and if its ok it
+ *start working.Specificaly it start's the clock
+ *it calls checker function using the input 
+ *file (created  with the generator)
+ *and it end's the time after that(calls printTime function).
+ */
 int main (int argc, char *argv[]) {
 	if(argc!=6) {
 		printf("Wrong number of arguents");
@@ -26,6 +39,14 @@ int main (int argc, char *argv[]) {
 	return 0;
 }
 
+/**printTime
+ *
+ *print time use's two timespec struct variables
+ *whitch contains a value that express the time of
+ *the system and by doing the right maths
+ *it calculates the time between the two timespecs in seconds
+ *It is used by main in order to print the time the program was running
+ */
 void printTime(struct timespec a,struct timespec b) {
 	const int DAS_NANO_SECONDS_IN_SEC = 1000000000;
 	long timeElapsed_s = b.tv_sec - a.tv_sec;

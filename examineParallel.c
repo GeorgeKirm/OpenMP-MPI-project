@@ -167,8 +167,9 @@ int checker(char *argv[])	{
 			
 			bufferSize = lSize - lSizeL;
         	        bufferSize = bufferSize/(3*BITS_LINE);
-               		size_t startToRead = (bufferSize % size) ? bufferSize/size + 1 : bufferSize/size;
-               		size_t endToRead = startToRead;
+               		//size_t startToRead = (bufferSize % size) ? bufferSize/size + 1 : bufferSize/size;
+               		size_t startToRead = bufferSize/size;
+			size_t endToRead = startToRead;
 			startToRead = startToRead*rank*(3*BITS_LINE);
                	 	endToRead = endToRead*(rank+1)*(3*BITS_LINE);
 			if(processLimit == -1){
@@ -212,7 +213,7 @@ int checker(char *argv[])	{
 			#endif
 
 			numberOfThreads(atoi(argv[4]));
-			usableCoordinates = checkerOMP(rank, buffer, bufferSize,time_limit) + usableCoordinates;
+			usableCoordinates = checkerOMP(rank, buffer, bufferSize,&time_limit) + usableCoordinates;
 			//printf("usableCoordinates in rank %d: %d\n",rank, usableCoordinates);
 			free (buffer);
 			lSizeL = lSize;
@@ -222,7 +223,7 @@ int checker(char *argv[])	{
 				breaker--;
 			}
 			//printf("\nLOULA\n\n");
-		} while(breaker > 0);
+		} while((breaker > 0)&&!(time_limit=-1));
 
 		MPI_Reduce(&usableCoordinates,&sum,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
 
@@ -250,15 +251,18 @@ int checker(char *argv[])	{
  *Now in the for we take one line and the 2 after lines in order to have the first cordinates(used buffer here)
  *to examine if it is in the space we want.
  *when the  loop is finished we return the usable Coordinates
+ *Now if the loop has over used the time limit then it enables the flag it iterates for the next for i++ times
+ * and it passes through the POINTER and Memory address to the checker function the time_limit change to '-1'
+ *this way we can stop checkers while from continue calling the for and stop the certain time the user wanted
  *used from checker function in order to split the proccessing of the data to the threads
  */
-int checkerOMP(int rank, char* buffer, size_t bufferSize,double time_limit)	{
+int checkerOMP(int rank, char* buffer, size_t bufferSize,double *time_limit)	{
 //	printf("%zu, %zu\n", startToread, endToRead);
 	int usableCoordinates=0;
-	if((time_limit>0)||(time_limit==-1)){
+	if((*time_limit>0)||(*time_limit==-1)){
 		double tstart = omp_get_wtime();
-	int flag=0;
-	double tend =0;
+		int flag=0;
+		double tend =0;
 		//printf(" la pontik2 %lf \n",time_limit);	
 		#pragma omp parallel shared(flag,tend)
 		{
@@ -294,18 +298,19 @@ int checkerOMP(int rank, char* buffer, size_t bufferSize,double time_limit)	{
 					temp++;
 				}
 				distance=0;
-				tend = omp_get_wtime() - tstart;
-				//printf(" la pontik3 %lf \n",time_limit);
+				tend = (double)(omp_get_wtime() - tstart);
+				//printf(" la pontik3 %lf \n",*time_limit);
 				//printf(" la pontik3' %lf \n",tend);
-				if ((time_limit>0)&&(tend>0)&&(tend >= time_limit)){
+				if ((*time_limit>0)&&(tend>0)&&(tend >= *time_limit)){
 					flag=1;
-					printf(" WTF \n");
+					*time_limit=-1;
 				}
 			}
 			//printf("%d: %d\n", omp_get_thread_num(), temp);
 			#pragma omp critical
 				usableCoordinates = usableCoordinates+temp;
-		}		
+		}
+		return usableCoordinates;		
 	}
 	//printf("Number of usable cordinates = %d\n", usableCoordinates);
 	return usableCoordinates;
