@@ -61,8 +61,8 @@ void printTime(struct timespec a,struct timespec b){
 /**numberOfThreads
  *
  *numberOfThreads use's an int  variable called threadsLimit
- *If the threadLimit is above 0 then there is no problem and it specifies the number of 
- *threads used in subsequent parallel sections if it's lower then it doe nothing
+ *If it is bigger than 0 it specifies the number of 
+ *threads used in subsequent parallel sections if it's lower then it does nothing
  *and let it in the default value.
  *It is used by checker in order to give set the number of threads according to argv[4]
  */
@@ -80,6 +80,7 @@ void numberOfThreads(int threadsLimit) {
  *Initializes the MPI execution environment and check's if it was successfull
  *Determines the rank of the calling process in the communicator
  *and the size of the group associated with him
+ *size is the Number of the ranks that will be used from the cluster
  *It changes the size variable to the proccess limit if it is bigger and 
  *not the deafault
  *It changes the size variable to the coordinatesToExamine 
@@ -93,8 +94,6 @@ void numberOfThreads(int threadsLimit) {
  *It sets the file position to the beginning of the file of the INPUT stream with rewind()
  *We check if we have more than 200.000 Coordinates to examine (3000000*2/3=...)then we
  *split the size and malocs else if we have lower we do one maloc only (breacker--)
- *
- *
  *With MPI_Reduce we reduce values on all processes to a single value
  *After It Terminates MPI execution environment 
  *Finaly it prints the usable coordinates from the coordinates given in the input
@@ -130,8 +129,6 @@ int checker(char *argv[])	{
 	//update_string(argv[2]);
 	//time_limit = atof(argv[2]);
 	double time_limit = strtod(argv[2],NULL);
-	//printf(" la pontik0 %s \n",argv[2]);
-	//printf(" la pontik1 %lf \n",time_limit);
         if(rank < size) {
 	/*
 		vvv Start of reading file vvv
@@ -222,7 +219,6 @@ int checker(char *argv[])	{
 				lSize = lSizeF;
 				breaker--;
 			}
-			//printf("\nLOULA\n\n");
 		} while((breaker > 0)&&!(time_limit=-1));
 
 		MPI_Reduce(&usableCoordinates,&sum,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
@@ -263,7 +259,6 @@ int checkerOMP(int rank, char* buffer, size_t bufferSize,double *time_limit)	{
 		double tstart = omp_get_wtime();
 		int flag=0;
 		double tend =0;
-		//printf(" la pontik2 %lf \n",time_limit);	
 		#pragma omp parallel shared(flag,tend)
 		{
 			float distance=0;
@@ -299,8 +294,6 @@ int checkerOMP(int rank, char* buffer, size_t bufferSize,double *time_limit)	{
 				}
 				distance=0;
 				tend = (double)(omp_get_wtime() - tstart);
-				//printf(" la pontik3 %lf \n",*time_limit);
-				//printf(" la pontik3' %lf \n",tend);
 				if ((*time_limit>0)&&(tend>0)&&(tend >= *time_limit)){
 					flag=1;
 					*time_limit=-1;
