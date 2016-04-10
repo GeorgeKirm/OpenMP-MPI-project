@@ -41,10 +41,10 @@ runGenerate:
 	./generator.o datafile 15000000
 
 runExamineParallel:
-	./examineParallel.o -1 0.333333 datafile -1 -1
+	./examineParallel.o -1 -1 datafile -1 -1
 
 runExamineSerial:
-	./examineSerial.o -1 0.333333 datafile -1 -1
+	./examineSerial.o -1 -1 datafile -1 -1
 
 # CLEAN COMMANDS
 # vvvvvvvvvvvvvv
