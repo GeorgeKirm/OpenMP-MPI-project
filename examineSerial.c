@@ -26,6 +26,10 @@ int main (int argc, char *argv[]) {
 		printf("Wrong number of arguents");
 		exit(0);
 	}
+	if(atof(argv[1])==0||atof(argv[2])==0||atof(argv[4])==0||atof(argv[5])==0){
+		printf("Arguments cant be 0\n");
+		exit(0);
+	}
 	// getting the start time of program
 	struct timespec startTime, endTime;
 	clock_gettime(CLOCK_MONOTONIC, &startTime);
