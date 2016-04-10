@@ -75,8 +75,3 @@ cleanGenerate:
 
 cleanClusterFiles:
 	rm -rf testing.*
-
-
-#delete me
-buildBU: examineParallelBU.c examineParallel.h
-	$(MC) $(CFLAGS) -fopenmp examineParallelBU.c examineParallel.h -o examineParallel.o $(LIBS)
