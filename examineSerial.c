@@ -78,10 +78,8 @@ void checker(char *argv[]) {
 }
 
 int checkerSer(char *argv[], char* buffer, size_t bufferSize)	{
-	float distance=0;
-	int usableCoordinates=0;
-	int a;
 	int coordinateNumberToExamine = atoi(argv[1]);
+	int usableCoordinates=0;
 	if(coordinateNumberToExamine >= 0){
 		// coordinateNumberToExamine = atoi(argv[1]);
 	} else {
@@ -89,32 +87,47 @@ int checkerSer(char *argv[], char* buffer, size_t bufferSize)	{
 	}
 	//printf("%d\n",coordinateNumberToExamine);
 	//char line[30]; /* or other suitable maximum line size */
-	for(a = 0; a < coordinateNumberToExamine*3; a=a+3 ){
-		char nLine1[10];
-		char nLine2[10];
-		char nLine3[10];
-		float value[3];
-		strncpy(nLine1,buffer+(a*10),9);
-		strncpy(nLine2,buffer+(a*10+10),9);
-		strncpy(nLine3,buffer+(a*10+20),9);
-		nLine1[10] = '\0';
-		nLine2[10] = '\0';
-		nLine3[10] = '\0';
-		value[0] = atof(nLine1);
-		value[1] = atof(nLine2);
-		value[2] = atof(nLine3);
-		/*/
-		printf("%f %f %f\n", value[0], value[1], value[2]);
-		printf("2. %f\n",value[1]);
-		printf("3. %f\n",value[2]);
-		printf("L. %f\n",value[0]*value[0] + value[1]*value[1] + value[2]*value[2]);
-		//*/
-		distance= sqrtf(value[0]*value[0] 
-				+ value[1]*value[1] + value[2]*value[2]);
-		if((distance>=DOWNLIMIT) && (distance<=UPLIMIT)) {
-			usableCoordinates++;
-		}
-		distance=0;
+	double time_limit = strtod(argv[2],NULL);
+	if((time_limit>0)||(time_limit==-1)){
+		float distance=0;
+		int a;
+		clock_t tstart;	
+		tstart = clock();
+		double tend=0;
+		int flag=0;
+		tend =0;
+		for(a = 0; a < coordinateNumberToExamine*3; a=a+3 ){
+				if(flag==1) continue;			
+				char nLine1[10];
+				char nLine2[10];
+				char nLine3[10];
+				float value[3];
+				strncpy(nLine1,buffer+(a*10),9);
+				strncpy(nLine2,buffer+(a*10+10),9);
+				strncpy(nLine3,buffer+(a*10+20),9);
+				nLine1[10] = '\0';
+				nLine2[10] = '\0';
+				nLine3[10] = '\0';
+				value[0] = atof(nLine1);
+				value[1] = atof(nLine2);
+				value[2] = atof(nLine3);
+				/*/
+				printf("%f %f %f\n", value[0], value[1], value[2]);
+				printf("2. %f\n",value[1]);
+				printf("3. %f\n",value[2]);
+				printf("L. %f\n",value[0]*value[0] + value[1]*value[1] + value[2]*value[2]);
+				//*/
+				distance= sqrtf(value[0]*value[0] 
+						+ value[1]*value[1] + value[2]*value[2]);
+				if((distance>=DOWNLIMIT) && (distance<=UPLIMIT)) {
+					usableCoordinates++;
+				}
+				distance=0;
+				tend = (double)(clock() - tstart) / CLOCKS_PER_SEC;
+				if ((time_limit>0)&&(tend>0)&&(tend >= time_limit)){
+					flag=1;
+				}
+		}	
 	}
 	//printf("Number of usable cordinates = %d\n", usableCoordinates);
 	return usableCoordinates;

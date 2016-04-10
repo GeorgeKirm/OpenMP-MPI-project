@@ -11,3 +11,4 @@ void printTime(struct timespec,struct timespec);
 void checker(char**);
 
 int checkerSer(char**, char*, size_t);
+
