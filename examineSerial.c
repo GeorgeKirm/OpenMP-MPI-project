@@ -58,6 +58,15 @@ void printTime(struct timespec a,struct timespec b) {
 	printf("Time: %ld.%09ld secs \n", timeElapsed_s, timeElapsed_n);
 }
 
+/**
+ *checker
+ * opens the data file
+ * find it's size and then goes back to start
+ * it reads it using the buffer and prints the errors if there are any
+ * then it close the file
+ * and then calls the checkerSer in order to find the usable coordinates
+ * when checkerSer ends it prints the number of the usable coordinates
+ */
 void checker(char *argv[]) {
 	// reading the values from the file
 	FILE * pFile;
@@ -97,7 +106,19 @@ void checker(char *argv[]) {
 
 	printf("Number of usable cordinates = %d\n", usableCoordinates);
 }
-
+/**
+ *checkerSer
+ *checks the limit of the cordinates
+ *checks the limit of the time
+ *starts the clock and then goes to the for
+ *it takes 3 lines each time in order to check the coordinates
+ *it check if there are in the space we need
+ *then it stops the clock
+ *and checks if the time limit is exided
+ *if yes it just itterate to the end
+ *if not it continues till the end
+ *then it returns the usable coordinates
+ */
 int checkerSer(char *argv[], char* buffer, size_t bufferSize)	{
 	int coordinateNumberToExamine = atoi(argv[1]);
 	int usableCoordinates=0;
