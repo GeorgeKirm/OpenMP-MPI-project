@@ -220,7 +220,8 @@ int checker(char *argv[])	{
 				lSize = lSizeF;
 				breaker--;
 			}
-		} while((breaker > 0)&&!(time_limit=-1));
+		} while((breaker > 0));
+//		} while((breaker > 0)&&!(time_limit=-1));
 
 		MPI_Reduce(&usableCoordinates,&sum,1,MPI_INT,MPI_SUM,0,MPI_COMM_WORLD);
 
@@ -258,7 +259,7 @@ int checkerOMP(int rank, char* buffer, size_t bufferSize)	{
 //	printf("%zu, %zu\n", startToread, endToRead);
 	int usableCoordinates=0;
 	//if((*time_limit>0)||(*time_limit==-1)){
-		double tstart = omp_get_wtime();
+	//	double tstart = omp_get_wtime();
 		//int flag=0;
 		//double tend =0;
 		#pragma omp parallel //shared(flag,tend)
