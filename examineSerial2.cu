@@ -9,15 +9,13 @@
 #define UPLIMIT 30
 #define LAST_RANK 6
 #define BITS_LINE 10
-#define MALLOC_SIZE 3000000 //100000 sugkrouseis
-#define KERNEL 512
+#define MALLOC_SIZE 240000 //80000 sugkrouseis
+//#define KERNEL 512
 
-//__device__ int *uc = 0;
 
 void printTime(struct timespec,struct timespec);
 
 void checker(char**);
-// */
 
 
 __device__ float strToF(const char* s){
@@ -55,11 +53,12 @@ __device__ float strToF(const char* s){
  *then it returns the usable coordinates
  */
 __global__ void checkerSer(char* buffer, long * bufferSize, int * usableCoordinates)	{
-//	*usableCoordinates=0;
+
 	//printf("%d\n",coordinateNumberToExamine);
 	//char line[30]; /* or other suitable maximum line size */
 	float distance=0;
 	//int a;
+
 	int idx = blockIdx.x * blockDim.x + threadIdx.x;
 	bufferSize[0] = bufferSize[0]/10;
 	if(idx<bufferSize[0]/3) {
@@ -83,28 +82,14 @@ __global__ void checkerSer(char* buffer, long * bufferSize, int * usableCoordina
 		distance= sqrtf(value[0]*value[0] + value[1]*value[1] + value[2]*value[2]);
 		if((distance>=DOWNLIMIT) && (distance<=UPLIMIT)) {
 //			__syncthreads();
+			//printf("%f %f %f",value[0],value[1],value[2]);
 			atomicAdd(usableCoordinates,1);
 			//(*usableCoordinates)++;
 			//(*uc)++;
 		}
 //__syncthreads();
-//printf("%d: %f %f %f \n", idx, value[0], value[1], value[2]);
-//printf("%d: %s %s %s \n", idx, nLine1, nLine2, nLine3);
-//printf("%d: %s \n", idx, nLine1, nLine2);
-//printf("%d: %s", idx, nLine1);
-//if(idx==0){
-//printf(" %ld \n",*bufferSize);
-//printf("Tas %s \n",buffer);
-//buffer[bufferSize] = '\0';
-//printf("%s",bufferSize);
-//	printf(" %d \n", *usableCoordinates);
-//uc+= *usableCoordinates;
-
-//*usableCoordinates+=*uc;
-//}
-		distance=0;
+		//distance=0;
 	}
-//uc+=*usableCoordinates;
 }
 
 
@@ -197,7 +182,7 @@ void checker(char *argv[]) {
 	long bufferSize;
 	int usableCoordinates = 0;	
 	int breaker = 2;
-        int  h_usableCoordinates = 0;  
+        //int  h_usableCoordinates = 0;  
 
 	pFile = fopen ( argv[3] , "r" );
 	if (pFile==NULL) {
@@ -216,7 +201,7 @@ void checker(char *argv[]) {
 	}
 	//printf("%ld\n", lSizeF);
 	rewind (pFile);
-	if(lSizeF > MALLOC_SIZE*2) {
+	if(lSizeF > MALLOC_SIZE) {
 		lSize = MALLOC_SIZE;
 	} else {
 		lSize = lSizeF;
@@ -227,7 +212,7 @@ void checker(char *argv[]) {
 		bufferSize = lSize - lSizeL;
 		// allocate memory to contain the whole file:
 
-		buffer = (char*) malloc (sizeof(char)*bufferSize);
+		buffer = (char*) malloc (sizeof(char)*bufferSize+1);
 		if (buffer == NULL) {
 			printf("Memory error");
 			exit (2);
@@ -281,11 +266,17 @@ void checker(char *argv[]) {
 			exit(5);
 		}
 
-//		int *ah;
-
 //*****************Kernel Run*******************************//
-		checkerSer<<<bufferSize/(30*KERNEL) + 1, KERNEL>>>(d_buffer, d_bufferSize, d_usableCoordinates);
-
+		//checkerSer<<<bufferSize/(30*KERNEL) + 1, KERNEL>>>(d_buffer, d_bufferSize, d_usableCoordinates);
+		long loula = bufferSize/30;
+		int KERNEL = 512;
+		if (loula < KERNEL) {
+			KERNEL = loula;
+		}		
+		dim3 grid(loula/KERNEL + (loula%KERNEL == 0 ? 0:1));            // defines a grid of 256 x 1 x 1 blocks
+		dim3 block(KERNEL);       // defines a block of 512 x 512 x 1 threads
+		checkerSer<<<grid, block>>>(d_buffer, d_bufferSize, d_usableCoordinates);
+	//	checkerSer<<<1,512>>>(d_buffer, d_bufferSize, d_usableCoordinates);
 		if(cudaMemcpy(&usableCoordinates,d_usableCoordinates, sizeof(int), cudaMemcpyDeviceToHost) != cudaSuccess) {
 			printf("cudaMemcpy error 6\n");
 			cudaFree(d_buffer);
@@ -294,9 +285,10 @@ void checker(char *argv[]) {
 			exit(5);
 		}
 //######################
-printf("%d \n", usableCoordinates);
-		h_usableCoordinates = usableCoordinates + h_usableCoordinates;
-printf("Line 290\n");		
+//printf("%d \n", usableCoordinates);
+//		h_usableCoordinates = usableCoordinates + h_usableCoordinates;
+//printf("Line 290\n");		
+
 		cudaFree(d_buffer);
 		cudaFree(d_bufferSize);
 		cudaFree(d_usableCoordinates);
@@ -311,7 +303,6 @@ printf("Line 290\n");
 		}
 	} while(breaker > 0);
 	fclose (pFile);
-	printf("add the numbers number %d \n",h_usableCoordinates);
+//	printf("add the numbers number %d \n",h_usableCoordinates);
 	printf("Number of usable cordinates = %d\n", usableCoordinates);
 }
-
