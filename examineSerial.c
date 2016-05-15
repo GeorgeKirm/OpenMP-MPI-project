@@ -9,6 +9,27 @@
 *  argv[5]: Proccesses to use MPI or -1 to mark no limit
 */
 
+
+float strToF(const char* s){
+  float asd = 0, fact = 1;
+  if (*s == '-'){
+    s++;
+    fact = -1;
+  };
+  int ch=0;
+  for ( ch = 0; *s; s++){
+    if (*s == '.'){
+      ch = 1; 
+      continue;
+    };
+    int d = *s - '0';
+    if (d >= 0 && d <=9){
+      if (ch) fact /= 10.0F;
+      asd = asd * 10.0F + (float)d;
+    };
+  };
+  return asd * fact;
+}
 /**main
  *
  *This function is the main which calls the other to work
@@ -71,12 +92,13 @@ void printTime(struct timespec a,struct timespec b) {
  * and then calls the checkerSer in order to find the usable coordinates
  * when checkerSer ends it prints the number of the usable coordinates
  */
-void checker(char *argv[]) {
-	// reading the values from the file
-	FILE * pFile;
-	long lSize;
+void checker(char *argv[]) {	FILE * pFile;
+	long lSize, lSizeF;
+	long lSizeL = 0;
 	char * buffer;
-	size_t result;
+	long bufferSize;
+	int usableCoordinates = 0;	
+	int breaker = 2;
 
 	pFile = fopen ( argv[3] , "r" );
 	if (pFile==NULL) {
@@ -86,27 +108,47 @@ void checker(char *argv[]) {
 
 	// obtain file size:
 	fseek (pFile , 0 , SEEK_END);
-	lSize = ftell (pFile);
+	lSizeF = ftell (pFile);
+	int coordinatesToExamine = atoi(argv[1]);
+	if(coordinatesToExamine > 0) {
+		if(coordinatesToExamine*30 < lSizeF) {
+			lSizeF = coordinatesToExamine*30;
+		}
+	}
+	//printf("%ld\n", lSizeF);
 	rewind (pFile);
-
-	// allocate memory to contain the whole file:
-	buffer = (char*) malloc (sizeof(char)*lSize);
-	if (buffer == NULL) {
-		printf("Memory error");
-		exit (2);
+	if(lSizeF > MALLOC_SIZE*2) {
+		lSize = MALLOC_SIZE;
+	} else {
+		lSize = lSizeF;
+		breaker--;
 	}
 
-	// copy the file into the buffer:
-	result = fread (buffer,1,lSize,pFile);
-	if (result != lSize) {
-		printf("Reading error");
-		exit (3);
-	}
-	/* the whole file is now loaded in the memory buffer. */
+	do {
+		bufferSize = lSize - lSizeL;
+		// allocate memory to contain the whole file:
+
+		buffer = (char*) malloc (sizeof(char)*bufferSize+1);
+		if (buffer == NULL) {
+			printf("Memory error");
+			exit (2);
+		}
+		// copy the file into the buffer:
+		bufferSize = fread (buffer, 1, bufferSize, pFile);
+		buffer[bufferSize] = '\0';
+		/* the whole file is now loaded in the memory buffer. */
+
+		usableCoordinates = checkerSer(buffer, bufferSize) + usableCoordinates;
+		free (buffer);
+		lSizeL = lSize;
+		lSize = lSize + MALLOC_SIZE;
+		//printf("Loula: %d, %ld %ld\n", breaker, lSize, lSizeL);
+		if( lSize >= lSizeF ) {
+			lSize = lSizeF;
+			breaker--;
+		}
+	} while(breaker > 0);
 	fclose (pFile);
-	
-	int usableCoordinates = checkerSer(argv, buffer, result);
-	free (buffer);
 
 	printf("Number of usable cordinates = %d\n", usableCoordinates);
 }
@@ -123,27 +165,13 @@ void checker(char *argv[]) {
  *if not it continues till the end
  *then it returns the usable coordinates
  */
-int checkerSer(char *argv[], char* buffer, size_t bufferSize)	{
-	int coordinateNumberToExamine = atoi(argv[1]);
+int checkerSer(char* buffer, size_t bufferSize)	{
 	int usableCoordinates=0;
-	if(coordinateNumberToExamine >= 0){
-		// coordinateNumberToExamine = atoi(argv[1]);
-	} else {
-		coordinateNumberToExamine = bufferSize/30;
-	}
 	//printf("%d\n",coordinateNumberToExamine);
 	//char line[30]; /* or other suitable maximum line size */
-	double time_limit = strtod(argv[2],NULL);
-	if((time_limit>0)||(time_limit==-1)){
 		float distance=0;
 		int a;
-		clock_t tstart;	
-		tstart = clock();
-		double tend=0;
-		int flag=0;
-		tend =0;
-		for(a = 0; a < coordinateNumberToExamine*3; a=a+3 ){
-				if(flag==1) continue;			
+		for(a = 0; a < bufferSize/10; a=a+3 ){
 				char nLine1[10];
 				char nLine2[10];
 				char nLine3[10];
@@ -151,12 +179,16 @@ int checkerSer(char *argv[], char* buffer, size_t bufferSize)	{
 				strncpy(nLine1,buffer+(a*10),9);
 				strncpy(nLine2,buffer+(a*10+10),9);
 				strncpy(nLine3,buffer+(a*10+20),9);
-				nLine1[10] = '\0';
-				nLine2[10] = '\0';
-				nLine3[10] = '\0';
-				value[0] = atof(nLine1);
-				value[1] = atof(nLine2);
-				value[2] = atof(nLine3);
+				nLine1[9] = '\0';
+				nLine2[9] = '\0';
+				nLine3[9] = '\0';
+				//value[0] = atof(nLine1);
+				//value[1] = atof(nLine2);
+				//value[2] = atof(nLine3);
+				value[0] = strToF(nLine1);
+				value[1] = strToF(nLine2);
+				value[2] = strToF(nLine3);
+									
 				/*/
 				printf("%f %f %f\n", value[0], value[1], value[2]);
 				printf("2. %f\n",value[1]);
@@ -169,12 +201,7 @@ int checkerSer(char *argv[], char* buffer, size_t bufferSize)	{
 					usableCoordinates++;
 				}
 				distance=0;
-				tend = (double)(clock() - tstart) / CLOCKS_PER_SEC;
-				if ((time_limit>0)&&(tend>0)&&(tend >= time_limit)){
-					flag=1;
-				}
-		}	
-	}
+		}
 	//printf("Number of usable cordinates = %d\n", usableCoordinates);
 	return usableCoordinates;
 }
