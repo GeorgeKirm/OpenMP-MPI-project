@@ -283,9 +283,9 @@ int checkerOMP(int rank, char* buffer, size_t bufferSize)	{
 				strncpy(nLine1,buffer+(a*BITS_LINE+(BITS_LINE*0)),BITS_LINE-1);
 				strncpy(nLine2,buffer+(a*BITS_LINE+(BITS_LINE*1)),BITS_LINE-1);
 				strncpy(nLine3,buffer+(a*BITS_LINE+(BITS_LINE*2)),BITS_LINE-1);
-				nLine1[BITS_LINE] = '\0';
-				nLine2[BITS_LINE] = '\0';
-				nLine3[BITS_LINE] = '\0';
+				nLine1[BITS_LINE-1] = '\0';
+				nLine2[BITS_LINE-1] = '\0';
+				nLine3[BITS_LINE-1] = '\0';
 				value[0] = atof(nLine1);
 				value[1] = atof(nLine2);
 				value[2] = atof(nLine3);
