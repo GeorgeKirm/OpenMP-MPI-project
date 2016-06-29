@@ -151,9 +151,9 @@ int checkerSer(char *argv[], char* buffer, size_t bufferSize)	{
 				strncpy(nLine1,buffer+(a*10),9);
 				strncpy(nLine2,buffer+(a*10+10),9);
 				strncpy(nLine3,buffer+(a*10+20),9);
-				nLine1[10] = '\0';
-				nLine2[10] = '\0';
-				nLine3[10] = '\0';
+				nLine1[10-1] = '\0';
+				nLine2[10-1] = '\0';
+				nLine3[10-1] = '\0';
 				value[0] = atof(nLine1);
 				value[1] = atof(nLine2);
 				value[2] = atof(nLine3);
