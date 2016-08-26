@@ -35,3 +35,9 @@
 			<li>A program which is the Parallel version on Cuda and which will use the datafile</li>
 		</ol>
 </ul>
+
+<h3>License</h3>
+<ul>
+	<li>"GNU GENERAL PUBLIC LICENSE" Version 3, 29 June 2007
+	<br>   More info on licence file
+</ul>
