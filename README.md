@@ -1,7 +1,7 @@
 
 <h1>OpenMP/OpenMPI/Cuda project</h1>
 
-<h2>What does this project:</h2>
+<h2>What is this project:</h2>
 <ul>
 	<li>This project generates a file with a huge list of the 3 vallues of the location of many points in space,
 	and use the datafile that was generated for 2 other programs which do check if the points have a certain distance from zero.
